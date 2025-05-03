@@ -78,7 +78,7 @@ namespace Venti.Experience
             FileHandler.WriteString(jsonStr, $"{metaData.experienceId}-schema-v{metaData.version.ToString()}.json", "Exports", true);
         }
 
-        public bool LoadJsonFromLocal()
+        public string LoadJsonFromLocal()
         {
             string jsonStr = FileHandler.ReadFile(configFileName + ".json", appFolderName);
             
@@ -88,23 +88,23 @@ namespace Venti.Experience
                 return LoadJson(json, false);
             }
 
-            return false;
+            return null;
         }
 
-        public bool LoadJsonFromWeb(string jsonStr)
+        public string LoadJsonFromWeb(string jsonStr)
         {
             JSONObject json = JSON.Parse(jsonStr).AsObject;
             if (json == null)
             {
                 Debug.LogError("JSON for loading experience is null");
-                return false;
+                return null;
             }
 
             JSONObject configJson = json["data"]["configuration"].AsObject;
             return LoadJson(configJson, true);
         }
 
-        bool LoadJson(JSONObject json, bool saveJson = true)
+        string LoadJson(JSONObject json, bool saveJson = true)
         {
             try
             {
@@ -147,12 +147,12 @@ namespace Venti.Experience
                 if (saveJson)
                     FileHandler.WriteString(json.ToString(), configFileName + ".json", appFolderName);
 
-                return true;
+                return json["hash"].Value;
             }
             catch (Exception e)
             {
                 Debug.LogError("Unable to parse experience setting JSON: " + e.Message);
-                return false;
+                return null;
             }
         }
     }

@@ -5,6 +5,8 @@ using UnityEngine;
 using SocketIOClient;
 using SocketIO.Core;
 using PimDeWitte.UnityMainThreadDispatcher;
+using Venti;
+using Venti.Experience;
 
 
 public class SocketConnector : MonoBehaviour
@@ -45,16 +47,27 @@ public class SocketConnector : MonoBehaviour
 
         client.On("configHash", response =>
         {
+
             Debug.Log("configHash Response: " + response);
 
-            string text = response.GetValue<string>();
+            SettingsManager.GetInstance.ParseHashesJson(response.ToString());
 
-            Debug.Log("configHash Text: " + text);
         });
 
         client.On("appConfig", response =>
         {
             Debug.Log("appConfig Response: " + response);
+
+            string hash = ExperienceManager.GetInstance.LoadJsonFromWeb(response.ToString());
+
+            if (hash != null)
+            {
+                //appHash = hash;
+
+                PlayerPrefs.SetString("appHash", hash);
+                PlayerPrefs.Save();
+            }
+
 
             string text = response.GetValue<string>();
 
