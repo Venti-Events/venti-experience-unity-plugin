@@ -42,6 +42,7 @@ namespace Venti
             //}
         }
 
+        #region PUBLIC_FUNCTIONS
         // Fetch the hashes from the server
         public void FetchHashes()
         {
@@ -51,14 +52,34 @@ namespace Venti
         // Fetch app config
         public void FetchAppConfig(string hash)
         {
-            StartCoroutine(GetAppConfig(hash));
+            if (hash != appHash)
+                StartCoroutine(GetAppConfig(hash));
         }
 
         // Fetch theme config
         public void FetchThemeConfig(string hash)
         {
-            StartCoroutine(GetThemeConfig(hash));
+            if (hash != themeHash)
+                StartCoroutine(GetThemeConfig(hash));
         }
+
+        public void ParseHashesJson(string jsonResponse)
+        {
+            JSONObject json = JSON.Parse(jsonResponse).AsObject;
+
+            if (json != null)
+            {
+                string fetchedAppHash = json["data"]["settings"];
+                string fetchedThemeHash = json["data"]["theme"];
+
+                Debug.Log("App Hash: " + fetchedAppHash);
+                Debug.Log("Theme Hash: " + fetchedThemeHash);
+
+                FetchAppConfig(fetchedAppHash);
+                FetchThemeConfig(fetchedThemeHash);
+            }
+        }
+        #endregion
 
         private IEnumerator GetHashes()
         {
@@ -79,29 +100,7 @@ namespace Venti
                 }
             }
         }
-        public void ParseHashesJson(string jsonResponse)
-        {//
-            JSONObject json = JSON.Parse(jsonResponse).AsObject;
 
-            if (json != null)
-            {
-                string fetchedAppHash = json["data"]["settings"];
-                string fetchedThemeHash = json["data"]["theme"];
-
-                Debug.Log("App Hash: " + fetchedAppHash);
-                Debug.Log("Theme Hash: " + fetchedThemeHash);
-
-                if (fetchedAppHash != appHash)
-                {
-                    FetchAppConfig(fetchedAppHash);
-                }
-
-                if (fetchedThemeHash != themeHash)
-                {
-                    FetchThemeConfig(fetchedThemeHash);
-                }
-            }
-        }
         private IEnumerator GetAppConfig(string hash)
         {
             string url = serverUrl + getAppConfigUrl;
@@ -121,10 +120,10 @@ namespace Venti
                     string jsonResponse = www.downloadHandler.text;
                     Debug.Log("Fetched app json: " + jsonResponse);
 
-                    string _hash = experienceManager.LoadJsonFromWeb(jsonResponse);
-                    if (_hash != null)
+                    bool success = experienceManager.LoadFromWebJson(jsonResponse);
+                    if (success)
                     {
-                        appHash = _hash;
+                        appHash = hash;
 
                         PlayerPrefs.SetString("appHash", appHash);
                         PlayerPrefs.Save();
@@ -151,7 +150,7 @@ namespace Venti
                     // Parse the response and update the theme manager
                     string jsonResponse = www.downloadHandler.text;
                     Debug.Log("Fetched theme json: " + jsonResponse);
-                    bool success = themeManager.LoadJsonFromWeb(jsonResponse);
+                    bool success = themeManager.LoadFromWebJson(jsonResponse);
                     if (success)
                     {
                         themeHash = hash;

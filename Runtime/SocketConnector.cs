@@ -1,42 +1,20 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using SocketIOClient;
-using SocketIO.Core;
-using PimDeWitte.UnityMainThreadDispatcher;
 using Venti;
-using Venti.Experience;
 
-
-public class SocketConnector : MonoBehaviour
+public class SocketConnector
 {
-    public string serverIp = "https://venti-server-nestjs-128798841108.us-central1.run.app";
+    //private string serverIp = "https://venti-server-nestjs-128798841108.us-central1.run.app";
 
-    public string appKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcmoiOiI1ZjQwNjBiZi04NjdkLTQ0MDctYmQ5NC0yZTBjMWU4YmFkY" +
-        "mIiLCJhcHAiOiJkYWQxYzBmMC0zY2MzLTRiMDQtYjE4YS01ZDg4ZTM2YWRlNjkiLCJqdGkiOiJlM2FkNDIzNy03ZDA4LTQ4MzItOGU3Yi1jYmE3OT" +
-        "BjNmIwMWMiLCJydGMiOjAsImlzcyI6InNlcnZlciIsImlhdCI6MTc0NjE4ODY1OSwiZXhwIjoxNzQ2ODM1MjAwLCJsdmEiOjE3NDU5NzEyMDAsIm1v" +
-        "ZCI6ImRlbW8ifQ.NhemXduwgdi6kb2z5R0bIM6WDYoP8XN-mJun-svhNqA";
+    //private string appKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcmoiOiI1ZjQwNjBiZi04NjdkLTQ0MDctYmQ5NC0yZTBjMWU4YmFkY" +
+    //    "mIiLCJhcHAiOiJkYWQxYzBmMC0zY2MzLTRiMDQtYjE4YS01ZDg4ZTM2YWRlNjkiLCJqdGkiOiJlM2FkNDIzNy03ZDA4LTQ4MzItOGU3Yi1jYmE3OT" +
+    //    "BjNmIwMWMiLCJydGMiOjAsImlzcyI6InNlcnZlciIsImlhdCI6MTc0NjE4ODY1OSwiZXhwIjoxNzQ2ODM1MjAwLCJsdmEiOjE3NDU5NzEyMDAsIm1v" +
+    //    "ZCI6ImRlbW8ifQ.NhemXduwgdi6kb2z5R0bIM6WDYoP8XN-mJun-svhNqA";
 
     private SocketIOClient.SocketIO client;
 
-    private void Start()
+    private void ConnectToServer(string serverIp, string appKey)
     {
-        // Initialize the socket connection here
-        ConnectToServer();
-    }
-
-    private void ConnectToServer()
-    {
-        //client = new SocketIOClient.SocketIO(serverIp, new SocketIOOptions());
-        //client = new SocketIOClient.SocketIO(serverIp, new SocketIOOptions
-        //{
-        //    Query = new List<KeyValuePair<string, string>>
-        //    {
-        //        new KeyValuePair<string, string>("token", appKey),
-        //    }
-        //});
-
         client = new SocketIOClient.SocketIO(serverIp, new SocketIOClient.SocketIOOptions
         {
             Auth = new Dictionary<string, string>
@@ -45,42 +23,28 @@ public class SocketConnector : MonoBehaviour
             }
         });
 
+        // On app connection, receive hash for appConfig and themeConfig
         client.On("configHash", response =>
         {
-
-            Debug.Log("configHash Response: " + response);
-
-            SettingsManager.GetInstance.ParseHashesJson(response.ToString());
-
+            Debug.Log("configHash: " + response);
+            SettingsManager.Instance.ParseHashesJson(response.ToString());
         });
 
-        client.On("appConfig", response =>
+        // On app config change, receive hash
+        client.On("appHash", response =>
         {
-            Debug.Log("appConfig Response: " + response);
+            string hash = response.ToString();
+            Debug.Log("appHash: " + hash);
 
-            string hash = ExperienceManager.GetInstance.LoadJsonFromWeb(response.ToString());
-
-            if (hash != null)
-            {
-                //appHash = hash;
-
-                PlayerPrefs.SetString("appHash", hash);
-                PlayerPrefs.Save();
-            }
-
-
-            string text = response.GetValue<string>();
-
-            Debug.Log("appConfig Text: " + text);
+            SettingsManager.Instance.FetchAppConfig(hash);
         });
 
-        client.On("themeConfig", response =>
+        client.On("themeHash", response =>
         {
-            Debug.Log("themeConfig Response: " + response);
+            string hash = response.ToString();
+            Debug.Log("themeHash: " + hash);
 
-            string text = response.GetValue<string>();
-
-            Debug.Log("themeConfig Text: " + text);
+            SettingsManager.Instance.FetchThemeConfig(hash);
         });
 
         //client.On("transform", response =>

@@ -26,7 +26,7 @@ namespace Venti.Experience
         [Header("Builds Info")]
         public BuildInfo[] builds;
 
-        [field: SerializeField][field: ReadOnly] public string hash {  get; private set; }
+        [field: NonSerialized][field: ReadOnly] public string hash {  get; private set; }
 
         [HideInInspector]
         private string[] plugins;

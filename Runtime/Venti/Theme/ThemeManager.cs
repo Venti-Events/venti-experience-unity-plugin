@@ -17,10 +17,10 @@ namespace Venti.Theme
 
         private void Start()
         {
-            LoadJsonFromLocal();
+            LoadFromLocalJson();
         }
 
-        public bool LoadJsonFromLocal()
+        public bool LoadFromLocalJson()
         {
             string jsonStr = FileHandler.ReadFile(configFileName + ".json", themeFolderName);
 
@@ -33,17 +33,25 @@ namespace Venti.Theme
             return false;
         }
 
-        public bool LoadJsonFromWeb(string jsonStr)
+        public bool LoadFromWebJson(string jsonStr)
         {
-            JSONObject json = JSON.Parse(jsonStr).AsObject;
-            if (json == null)
+            //JSONObject json = JSON.Parse(jsonStr).AsObject;
+            //if (json == null)
+            //{
+            //    Debug.LogError("JSON for loading experience is null");
+            //    return false;
+            //}
+
+            //JSONObject configJson = json["data"]["theme"].AsObject;
+            //return LoadJson(configJson.ToString(), true);
+
+            if(string.IsNullOrEmpty(jsonStr))
             {
-                Debug.LogError("JSON for loading experience is null");
+                Debug.LogError("JSON string for loading theme is null or empty");
                 return false;
             }
 
-            JSONObject configJson = json["data"]["theme"].AsObject;
-            return LoadJson(configJson.ToString(), true);
+            return LoadJson(jsonStr, true);
         }
 
         bool LoadJson(string jsonStr, bool saveJson = true)

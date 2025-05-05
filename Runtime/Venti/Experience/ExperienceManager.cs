@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace Venti.Experience
 {
-    public class ExperienceManager : Singleton<ExperienceManager>
+    public class ExperienceManager : MonoBehaviour
     {
         #region JSON_Items
         [field: SerializeField] public Metadata metaData { get; private set; }
@@ -31,7 +31,7 @@ namespace Venti.Experience
             ClearFields();
             FetchChildFields();
 
-            LoadJsonFromLocal();
+            LoadFromLocalJson();
         }
 
         public void FetchChildFields()
@@ -78,50 +78,47 @@ namespace Venti.Experience
             FileHandler.WriteString(jsonStr, $"{metaData.experienceId}-schema-v{metaData.version.ToString()}.json", "Exports", true);
         }
 
-        public string LoadJsonFromLocal()
+        public bool LoadFromLocalJson()
         {
             string jsonStr = FileHandler.ReadFile(configFileName + ".json", appFolderName);
-            
+
             if (jsonStr != null)
             {
                 JSONObject json = JSON.Parse(jsonStr).AsObject;
                 return LoadJson(json, false);
             }
 
-            return null;
+            return false;
         }
 
-        public string LoadJsonFromWeb(string jsonStr)
+        public bool LoadFromWebJson(string jsonStr)
         {
             JSONObject json = JSON.Parse(jsonStr).AsObject;
             if (json == null)
             {
                 Debug.LogError("JSON for loading experience is null");
-                return null;
+                return false;
             }
 
             JSONObject configJson = json["data"]["configuration"].AsObject;
             return LoadJson(configJson, true);
         }
 
-        string LoadJson(JSONObject json, bool saveJson = true)
+        bool LoadJson(JSONObject json, bool saveJson = true)
         {
             try
             {
-                //JSONObject json = JSON.Parse(jsonStr).AsObject;
+                bool success = true;
 
-                if(json == null)
+                if (json == null)
                     throw new Exception("JSON for loading experience is null");
 
                 // TODO: Check whether versions match
 
-                // Read saved app values json
-                //string savedAppJsonStr = Utils.ReadFile(valuesFileName + ".json", "app");
-
                 // Update metadata
                 if (json["metadata"] != null)
                 {
-                    if (json["hash"].Value != metaData.hash)
+                    if (json["metadata"]["hash"].Value != metaData.hash)
                     {
                         string metadataJsonString = json["metadata"].ToString();
                         metaData = JsonConvert.DeserializeObject<Metadata>(metadataJsonString);
@@ -139,20 +136,29 @@ namespace Venti.Experience
                         if (i >= fetchedFields.Count || fetchedFields[i] == null)
                             continue;
 
-                        JSONObject fetchedField = fetchedFields[i].AsObject;
-                        fields[i].SetFromJson(fetchedField, true);
+                        // Catch any errors but continue updating other fields
+                        try
+                        {
+                            JSONObject fetchedField = fetchedFields[i].AsObject;
+                            fields[i].SetFromJson(fetchedField, true);
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.LogError("Unable to parse field JSON: " + e.Message);
+                            success = false;
+                        }
                     }
                 }
 
                 if (saveJson)
                     FileHandler.WriteString(json.ToString(), configFileName + ".json", appFolderName);
 
-                return json["hash"].Value;
+                return success;
             }
             catch (Exception e)
             {
                 Debug.LogError("Unable to parse experience setting JSON: " + e.Message);
-                return null;
+                return false;
             }
         }
     }
