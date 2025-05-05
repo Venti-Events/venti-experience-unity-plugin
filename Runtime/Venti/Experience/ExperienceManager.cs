@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace Venti.Experience
 {
-    public class ExperienceManager : Singleton<ExperienceManager>
+    public class ExperienceManager : MonoBehaviour
     {
         #region JSON_Items
         [field: SerializeField] public Metadata metaData { get; private set; }
@@ -31,7 +31,7 @@ namespace Venti.Experience
             ClearFields();
             FetchChildFields();
 
-            LoadJsonFromLocal();
+            LoadFromLocalJson();
         }
 
         public void FetchChildFields()
@@ -78,10 +78,10 @@ namespace Venti.Experience
             FileHandler.WriteString(jsonStr, $"{metaData.experienceId}-schema-v{metaData.version.ToString()}.json", "Exports", true);
         }
 
-        public bool LoadJsonFromLocal()
+        public bool LoadFromLocalJson()
         {
             string jsonStr = FileHandler.ReadFile(configFileName + ".json", appFolderName);
-            
+
             if (jsonStr != null)
             {
                 JSONObject json = JSON.Parse(jsonStr).AsObject;
@@ -91,7 +91,7 @@ namespace Venti.Experience
             return false;
         }
 
-        public bool LoadJsonFromWeb(string jsonStr)
+        public bool LoadFromWebJson(string jsonStr)
         {
             JSONObject json = JSON.Parse(jsonStr).AsObject;
             if (json == null)
@@ -108,20 +108,17 @@ namespace Venti.Experience
         {
             try
             {
-                //JSONObject json = JSON.Parse(jsonStr).AsObject;
+                bool success = true;
 
-                if(json == null)
+                if (json == null)
                     throw new Exception("JSON for loading experience is null");
 
                 // TODO: Check whether versions match
 
-                // Read saved app values json
-                //string savedAppJsonStr = Utils.ReadFile(valuesFileName + ".json", "app");
-
                 // Update metadata
                 if (json["metadata"] != null)
                 {
-                    if (json["hash"].Value != metaData.hash)
+                    if (json["metadata"]["hash"].Value != metaData.hash)
                     {
                         string metadataJsonString = json["metadata"].ToString();
                         metaData = JsonConvert.DeserializeObject<Metadata>(metadataJsonString);
@@ -139,15 +136,24 @@ namespace Venti.Experience
                         if (i >= fetchedFields.Count || fetchedFields[i] == null)
                             continue;
 
-                        JSONObject fetchedField = fetchedFields[i].AsObject;
-                        fields[i].SetFromJson(fetchedField, true);
+                        // Catch any errors but continue updating other fields
+                        try
+                        {
+                            JSONObject fetchedField = fetchedFields[i].AsObject;
+                            fields[i].SetFromJson(fetchedField, true);
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.LogError("Unable to parse field JSON: " + e.Message);
+                            success = false;
+                        }
                     }
                 }
 
                 if (saveJson)
                     FileHandler.WriteString(json.ToString(), configFileName + ".json", appFolderName);
 
-                return true;
+                return success;
             }
             catch (Exception e)
             {

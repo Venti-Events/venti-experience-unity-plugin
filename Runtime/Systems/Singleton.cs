@@ -8,7 +8,8 @@ public class Singleton<T> : MonoBehaviour where T : Component
     protected static T m_Instance = null;
     protected static bool HasInstance => m_Instance != null;
 
-    public static T GetInstance => m_Instance;
+    public static T Instance => m_Instance;
+
     protected virtual void Awake()
     {
         if (m_Instance == null)
