@@ -7,39 +7,33 @@ namespace Venti
 {
     public class SettingsManager : Singleton<SettingsManager>
     {
-        public string appKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcmoiOiJhYzYwMjNiZi01OTE2LTRkYWQtYTRlMS03YTU0NGQzMDRiNWEiLCJhcHAiOiJiNGI5NGYzOC1kNTQzLTRkMTEtYmZiOS0zYjRhYzMzODg5ZjgiLCJqdGkiOiIyYTFiNGVhYS0xYzk3LTQ1OWUtOTdmMC02N2M4ZTRkMTQ4YTYiLCJydGMiOjAsImlzcyI6InNlcnZlciIsImlhdCI6MTc0NTU1NTIzNCwiZXhwIjoxNzQ1OTUxNDAwLCJsdmEiOjE3NDUyNjAyMDAsIm1vZCI6ImRlbW8ifQ.zq8kbVGx_QPXDTT4Y-DM32BiNRYImMZng3aIm-tLxBQ";
-        public string serverUrl = "https://venti-events.el.r.appspot.com/api/v1";
-        public string getAppAndThemeHashesUrl = @"/experience-app/get-experience-app-configuration-hash";
-        public string getAppConfigUrl = @"/experience-app/get-experience-app-configuration";
-        public string getThemeUrl = @"/project/get-project-theme-config";
-
-        public float pollInterval = 5f;
-
         public Experience.ExperienceManager experienceManager;
         public Theme.ThemeManager themeManager;
+
+        private SocketConnector socket;
+
+        public string appKey;
+        public const string serverUrl = "https://venti-server-nestjs-128798841108.us-central1.run.app";
+        public const string getAppAndThemeHashesUrl = @"/api/v1/experience-app/get-experience-app-configuration-hash";
+        public const string getAppConfigUrl = @"/api/v1/experience-app/get-experience-app-configuration";
+        public const string getThemeUrl = @"/api/v1/project/get-project-theme-config";
 
         private string appHash;
         private string themeHash;
 
-        //private float timer;
 
         void Start()
         {
             appHash = PlayerPrefs.GetString("appHash", "");
             themeHash = PlayerPrefs.GetString("themeHash", "");
 
-            // Fetch the hashes from the server
-            //FetchHashes();
-            //timer = Time.time;
+            // Connect to server socket
+            socket = new SocketConnector(serverUrl, appKey);
         }
 
         private void Update()
         {
-            //if (Time.time - timer > pollInterval)
-            //{
-            //    FetchHashes();
-            //    timer = Time.time;
-            //}
+
         }
 
         #region PUBLIC_FUNCTIONS
@@ -53,7 +47,12 @@ namespace Venti
         public void FetchAppConfig(string hash)
         {
             if (hash != appHash)
+            {
+                Debug.Log("Hashes mismatch. Re-fetch");
                 StartCoroutine(GetAppConfig(hash));
+            }
+            else
+                Debug.Log("App hash is the same, no need to fetch again.");
         }
 
         // Fetch theme config
@@ -69,8 +68,10 @@ namespace Venti
 
             if (json != null)
             {
-                string fetchedAppHash = json["data"]["settings"];
-                string fetchedThemeHash = json["data"]["theme"];
+                //string fetchedAppHash = json["data"]["settings"];
+                //string fetchedThemeHash = json["data"]["theme"];
+                string fetchedAppHash = json["settings"];
+                string fetchedThemeHash = json["theme"];
 
                 Debug.Log("App Hash: " + fetchedAppHash);
                 Debug.Log("Theme Hash: " + fetchedThemeHash);
@@ -103,7 +104,9 @@ namespace Venti
 
         private IEnumerator GetAppConfig(string hash)
         {
+            Debug.Log("GetAppConfig");
             string url = serverUrl + getAppConfigUrl;
+            Debug.Log("Fetching app config from: " + url + " with hash: " + hash);
 
             using (UnityWebRequest www = UnityWebRequest.Get(url))
             {
@@ -159,6 +162,11 @@ namespace Venti
                     }
                 }
             }
+        }
+
+        void OnApplicationQuit()
+        {
+            socket.Dispose();
         }
     }
 

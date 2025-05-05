@@ -1,20 +1,28 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Venti;
+using PimDeWitte.UnityMainThreadDispatcher;
 
-public class SocketConnector
+public class SocketConnector: IDisposable
 {
-    //private string serverIp = "https://venti-server-nestjs-128798841108.us-central1.run.app";
-
-    //private string appKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcmoiOiI1ZjQwNjBiZi04NjdkLTQ0MDctYmQ5NC0yZTBjMWU4YmFkY" +
-    //    "mIiLCJhcHAiOiJkYWQxYzBmMC0zY2MzLTRiMDQtYjE4YS01ZDg4ZTM2YWRlNjkiLCJqdGkiOiJlM2FkNDIzNy03ZDA4LTQ4MzItOGU3Yi1jYmE3OT" +
-    //    "BjNmIwMWMiLCJydGMiOjAsImlzcyI6InNlcnZlciIsImlhdCI6MTc0NjE4ODY1OSwiZXhwIjoxNzQ2ODM1MjAwLCJsdmEiOjE3NDU5NzEyMDAsIm1v" +
-    //    "ZCI6ImRlbW8ifQ.NhemXduwgdi6kb2z5R0bIM6WDYoP8XN-mJun-svhNqA";
-
     private SocketIOClient.SocketIO client;
+
+    public SocketConnector(string serverIp, string appKey)
+    {
+        ConnectToServer(serverIp, appKey);
+    }
+
+    ~SocketConnector()
+    {
+        Disconnect();
+    }
 
     private void ConnectToServer(string serverIp, string appKey)
     {
+        Debug.Log("Connecting to server at " + serverIp + " with appKey: " + appKey);
+
         client = new SocketIOClient.SocketIO(serverIp, new SocketIOClient.SocketIOOptions
         {
             Auth = new Dictionary<string, string>
@@ -26,8 +34,10 @@ public class SocketConnector
         // On app connection, receive hash for appConfig and themeConfig
         client.On("configHash", response =>
         {
-            Debug.Log("configHash: " + response);
-            SettingsManager.Instance.ParseHashesJson(response.ToString());
+            string configHashJsonStr = response.GetValue<System.Text.Json.JsonElement>().ToString();
+            Debug.Log("configHash: " + configHashJsonStr);
+            UnityMainThreadDispatcher.Instance().Enqueue(ParseHashesJson(configHashJsonStr));
+            //UnityMainThreadDispatcher.Instance().Enqueue(ThisWillBeExecutedOnTheMainThread(dto));
         });
 
         // On app config change, receive hash
@@ -79,7 +89,6 @@ public class SocketConnector
 
         client.OnConnected += async (sender, e) =>
         {
-
             Debug.Log("Connected to server!");
         };
         client.ConnectAsync();
@@ -93,8 +102,29 @@ public class SocketConnector
     //    yield return null;
     //}
 
+    IEnumerator ParseHashesJson(string jsonResponse)
+    {
+        Debug.Log("Received hashes JSON: " + jsonResponse);
+        SettingsManager.Instance.ParseHashesJson(jsonResponse);
+        yield return null;
+    }
+
+    void Disconnect()
+    {
+        if (client != null && client.Connected)
+        {
+            client.DisconnectAsync();
+            client = null;
+        }
+    }
+
     void OnApplicationQuit()
     {
-        client.DisconnectAsync();
+        Disconnect();
+    }
+
+    public void Dispose()
+    {
+        Disconnect();
     }
 }
