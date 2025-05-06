@@ -22,7 +22,7 @@ namespace Venti
         private string appHash;
         private string themeHash;
 
-        private void Awake()
+        void Start()
         {
             if (PlayerPrefs.HasKey("appKey"))
             {
@@ -34,10 +34,7 @@ namespace Venti
                 SceneManager.LoadScene("QRScanScene");
                 Debug.LogError("PlayerPrefs doesn't have appKey saved");
             }
-        }
 
-        void Start()
-        {
             appHash = PlayerPrefs.GetString("appHash", "");
             themeHash = PlayerPrefs.GetString("themeHash", "");
 

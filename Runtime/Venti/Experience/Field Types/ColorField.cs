@@ -28,7 +28,6 @@ namespace Venti.Experience
             JSONObject json = base.GetJson();
             json["default"] = "#" + ColorUtility.ToHtmlStringRGBA(@default);
 
-
             return json;
         }
 
@@ -47,13 +46,9 @@ namespace Venti.Experience
                 
             // Convert hex string to Color
             if (UnityEngine.ColorUtility.TryParseHtmlString(valueRaw, out Color color))
-            {
                 value = color;
-            }
             else
-            {
                 throw new Exception("Invalid color format in JSON for " + id);
-            }
 
             onChange.Invoke(value);
             onChangeWithId.Invoke(id, value);

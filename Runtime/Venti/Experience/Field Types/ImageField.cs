@@ -3,7 +3,6 @@ using UnityEngine.Events;
 using SimpleJSON;
 using UnityEngine.Networking;
 using System.Collections;
-using System.IO;
 using System.Web;
 
 namespace Venti.Experience

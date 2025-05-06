@@ -36,25 +36,24 @@ public class SocketConnector: IDisposable
         {
             string configHashJsonStr = response.GetValue<System.Text.Json.JsonElement>().ToString();
             Debug.Log("configHash: " + configHashJsonStr);
+
             UnityMainThreadDispatcher.Instance().Enqueue(ParseHashesJson(configHashJsonStr));
         });
 
         // On app config change, receive hash
         client.On("appHash", response =>
         {
-            string hash = response.GetValue<System.Text.Json.JsonElement>().ToString();
+            //string hash = response.GetValue<System.Text.Json.JsonElement>().ToString();
+            string hash = response.GetValue<string>();
             Debug.Log("appHash: " + hash);
-
-            string hash2 = response.GetValue<string>();
-            Debug.Log("appHash 2: " + hash2);
-
 
             UnityMainThreadDispatcher.Instance().Enqueue(FetchAppConfig(hash));
         });
 
         client.On("themeHash", response =>
         {
-            string hash = response.ToString();
+            //string hash = response.GetValue<System.Text.Json.JsonElement>().ToString();
+            string hash = response.GetValue<string>();
             Debug.Log("themeHash: " + hash);
 
             UnityMainThreadDispatcher.Instance().Enqueue(FetchThemeConfig(hash));
@@ -81,7 +80,7 @@ public class SocketConnector: IDisposable
 
     IEnumerator FetchThemeConfig(string hash)
     {
-
+        SettingsManager.Instance.FetchThemeConfig(hash);
         yield return null;
     }
 
