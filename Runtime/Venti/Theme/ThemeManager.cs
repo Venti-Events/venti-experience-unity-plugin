@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using SimpleJSON;
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -9,7 +10,7 @@ namespace Venti.Theme
     {
         [field: SerializeField] public Theme theme { get; private set; }
 
-        public UnityEvent onThemetaUpdate;
+        public UnityEvent onThemeUpdate;
 
         // JSON File Path
         public const string themeFolderName = "theme";
@@ -24,7 +25,7 @@ namespace Venti.Theme
         {
             string jsonStr = FileHandler.ReadFile(configFileName + ".json", themeFolderName);
 
-            if (jsonStr != null)
+            if (string.IsNullOrEmpty(jsonStr))
             {
                 //JSONObject json = JSON.Parse(jsonStr).AsObject;
                 return LoadJson(jsonStr, false);
@@ -58,9 +59,9 @@ namespace Venti.Theme
         {
             try
             {
-                theme = JsonConvert.DeserializeObject<Theme>(jsonStr);
+                theme = JsonConvert.DeserializeObject<ThemeResponse>(jsonStr).data.theme;
                 // TODO: Download all images from cache and url
-                onThemetaUpdate?.Invoke();
+                onThemeUpdate?.Invoke();
 
                 if (saveJson)
                     FileHandler.WriteString(jsonStr, configFileName + ".json", themeFolderName);
@@ -72,6 +73,21 @@ namespace Venti.Theme
                 Debug.LogError($"Failed to load theme JSON: {e.Message}");
                 return false;
             }
+        }
+
+        [Serializable]
+        private class ThemeResponse
+        {
+            public bool success;
+            public ThemeData data;
+            public string message;
+        }
+
+        [Serializable]
+        private class ThemeData
+        {
+            public string id;
+            public Theme theme;
         }
     }
 }
