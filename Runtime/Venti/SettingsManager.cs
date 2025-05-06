@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 using SimpleJSON;
+using UnityEngine.SceneManagement;
 
 namespace Venti
 {
@@ -21,6 +22,19 @@ namespace Venti
         private string appHash;
         private string themeHash;
 
+        private void Awake()
+        {
+            if (PlayerPrefs.HasKey("appKey"))
+            {
+                appKey = PlayerPrefs.GetString("appKey");
+                Debug.Log($"Loaded saved appKey: {appKey}");
+            }
+            else
+            {
+                SceneManager.LoadScene("QRScanScene");
+                Debug.LogError("PlayerPrefs doesn't have appKey saved");
+            }
+        }
 
         void Start()
         {
@@ -31,10 +45,6 @@ namespace Venti
             socket = new SocketConnector(serverUrl, appKey);
         }
 
-        private void Update()
-        {
-
-        }
 
         #region PUBLIC_FUNCTIONS
         // Fetch the hashes from the server
@@ -81,6 +91,19 @@ namespace Venti
             }
         }
         #endregion
+
+        [ContextMenu("Delete App Key")]
+        private void DeletePlayerSavedAppKey()
+        {
+            if (PlayerPrefs.HasKey("appKey"))
+            {
+                PlayerPrefs.DeleteKey("appKey");
+                PlayerPrefs.Save();
+            }
+
+            Debug.Log("appKey has been cleared.");
+
+        }
 
         private IEnumerator GetHashes()
         {
