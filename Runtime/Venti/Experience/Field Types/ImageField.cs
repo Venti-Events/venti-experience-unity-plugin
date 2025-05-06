@@ -67,7 +67,7 @@ namespace Venti.Experience
             valueRaw = newValue;
 
             // Delete old file
-            if (oldFileName != null || oldFileName == "")
+            if (!string.IsNullOrEmpty(oldFileName))
                 FileHandler.DeleteFile(oldFileName, ExperienceManager.appFolderName);
 
             if (FileHandler.FileExists(newFileName, ExperienceManager.appFolderName))

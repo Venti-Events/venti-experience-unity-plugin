@@ -3,6 +3,7 @@ using SimpleJSON;
 using System;
 using UnityEngine;
 using UnityEngine.Events;
+using static Venti.Theme.Theme;
 
 namespace Venti.Theme
 {
@@ -47,7 +48,7 @@ namespace Venti.Theme
             //JSONObject configJson = json["data"]["theme"].AsObject;
             //return LoadJson(configJson.ToString(), true);
 
-            if(string.IsNullOrEmpty(jsonStr))
+            if (string.IsNullOrEmpty(jsonStr))
             {
                 Debug.LogError("JSON string for loading theme is null or empty");
                 return false;
@@ -76,12 +77,13 @@ namespace Venti.Theme
                 // TODO: Check whether versions match
 
                 // Update all fields from json
-                theme.SetFromJson(json, true);
+                if (SetFromJson(json, true))
+                {
+                    onThemeUpdate?.Invoke();
 
-                onThemeUpdate?.Invoke();
-             
-                if (saveJson)
-                    FileHandler.WriteString(json.ToString(), configFileName + ".json", themeFolderName);
+                    if (saveJson)
+                        FileHandler.WriteString(json.ToString(), configFileName + ".json", themeFolderName);
+                }
 
                 return true;
             }
@@ -92,19 +94,141 @@ namespace Venti.Theme
             }
         }
 
-        [Serializable]
-        private class ThemeResponse
-        {
-            public bool success;
-            public ThemeData data;
-            public string message;
-        }
+        //[Serializable]
+        //private class ThemeResponse
+        //{
+        //    public bool success;
+        //    public ThemeData data;
+        //    public string message;
+        //}
 
-        [Serializable]
-        private class ThemeData
+        //[Serializable]
+        //private class ThemeData
+        //{
+        //    public string id;
+        //    public Theme theme;
+        //}
+
+        public bool SetFromJson(JSONObject json, bool useCache)
         {
-            public string id;
-            public Theme theme;
+            Debug.Log("Setting Theme from JSON");
+
+            // Header
+            if (theme.header.hash != json["header"]["hash"].ToString())
+            {
+                string newHeaderStr = json["header"].ToString();
+                Header newHeader = JsonConvert.DeserializeObject<Header>(newHeaderStr);
+
+                // TODO: Dispose old texture
+                newHeader.companyLogo.image = theme.header.companyLogo.image;
+                CacheManager.Instance.GetImage(theme.header.companyLogo.imageUrl, newHeader.companyLogo.imageUrl, themeFolderName, (Texture2D tex) => { theme.header.companyLogo.image = tex; });
+                
+                newHeader.eventLogo.image = theme.header.eventLogo.image;
+                CacheManager.Instance.GetImage(theme.header.eventLogo.imageUrl, newHeader.eventLogo.imageUrl, themeFolderName, (Texture2D tex) => { theme.header.eventLogo.image = tex; });
+                theme.header = newHeader;
+            }
+
+            // Footer
+            if (theme.footer.hash != json["footer"]["hash"].ToString()) 
+            { 
+                string newFooterStr = json["footer"].ToString();
+                Footer newFooter = JsonConvert.DeserializeObject<Footer>(newFooterStr);
+                // TODO load list of images
+                theme.footer = newFooter;
+            }
+
+            // ThemeColors
+            if (theme.themeColors.hash != json["themeColors"]["hash"].ToString())
+            {
+                string newThemeColorsStr = json["themeColors"].ToString();
+                theme.themeColors = JsonConvert.DeserializeObject<ThemeColor>(newThemeColorsStr);
+                ColorUtility.TryParseHtmlString(theme.themeColors.primary, out theme.themeColors.primaryColorValue);
+                ColorUtility.TryParseHtmlString(theme.themeColors.secondary, out theme.themeColors.secondaryColorValue);
+            }
+
+            // Typography
+            if (theme.typography.hash != json["typography"]["hash"].ToString())
+            {
+                string newTypographyStr = json["typography"].ToString();
+                theme.typography = JsonConvert.DeserializeObject<Typography>(newTypographyStr);
+                ColorUtility.TryParseHtmlString(theme.typography.typeScales.heading.color, out theme.typography.typeScales.heading.colorValue);
+                ColorUtility.TryParseHtmlString(theme.typography.typeScales.subHeading.color, out theme.typography.typeScales.subHeading.colorValue);
+                ColorUtility.TryParseHtmlString(theme.typography.typeScales.body.color, out theme.typography.typeScales.body.colorValue);
+                ColorUtility.TryParseHtmlString(theme.typography.typeScales.caption.color, out theme.typography.typeScales.caption.colorValue);
+            }
+
+            // Buttons
+            if (theme.buttons.hash != json["buttons"]["hash"].ToString())
+            {
+                string newButtonsStr = json["buttons"].ToString();
+                theme.buttons = JsonConvert.DeserializeObject<ThemeButton>(newButtonsStr);
+                ColorUtility.TryParseHtmlString(theme.buttons.primary.textColor, out theme.buttons.primary.textColorValue);
+                ColorUtility.TryParseHtmlString(theme.buttons.secondary.textColor, out theme.buttons.secondary.textColorValue);
+            }
+
+            // Surfaces
+            if (theme.surfaces.hash != json["surfaces"]["hash"].ToString())
+            {
+                string newSurfacesStr = json["surfaces"].ToString();
+                theme.surfaces = JsonConvert.DeserializeObject<Surface>(newSurfacesStr);
+                ColorUtility.TryParseHtmlString(theme.surfaces.color, out theme.surfaces.colorValue);
+                ColorUtility.TryParseHtmlString(theme.surfaces.borderColor, out theme.surfaces.borderColorValue);
+            }
+
+            // Background
+            if (theme.background.hash != json["background"]["hash"].ToString())
+            {
+                string newBackgroundStr = json["background"].ToString();
+                Background newBackground = JsonConvert.DeserializeObject<Background>(newBackgroundStr);
+                ColorUtility.TryParseHtmlString(newBackground.color, out newBackground.colorValue);
+                newBackground.landscapeImage = theme.background.landscapeImage;
+
+                // TODO: Dispose old texture
+                newBackground.portraitImage = theme.background.portraitImage;
+                CacheManager.Instance.GetImage(theme.background.portraitImageUrl, newBackground.portraitImageUrl, themeFolderName, (Texture2D tex) => { newBackground.portraitImage = tex; });
+
+                newBackground.landscapeImage = theme.background.landscapeImage;
+                CacheManager.Instance.GetImage(theme.background.landscapeImageUrl, newBackground.landscapeImageUrl, themeFolderName, (Texture2D tex) => { newBackground.landscapeImage = tex; });
+
+                theme.background = newBackground;
+            }
+
+            //string decodedUrl = HttpUtility.UrlDecode(url);
+
+            //string oldFileName = null;
+            //string newFileName = null;
+
+            //// Extract file names from urls
+            //if (valueRaw != null)
+            //    oldFileName = valueRaw.Substring(valueRaw.LastIndexOf('/') + 1);
+            //newFileName = newValue.Substring(newValue.LastIndexOf('/') + 1);
+            ////Debug.Log("Old value: " + valueRaw);
+            ////Debug.Log("Old filename: " + oldFileName);
+
+            ////Debug.Log("New value: " + newValue);
+            ////Debug.Log("New filename: " + newFileName);
+
+            //valueRaw = newValue;
+
+            //// Delete old file
+            //if (oldFileName != null || oldFileName == "")
+            //    FileHandler.DeleteFile(oldFileName, ExperienceManager.appFolderName);
+
+            //if (FileHandler.FileExists(newFileName, ExperienceManager.appFolderName))
+            //{
+            //    // If fetched image exists in cache. e.g. first run
+            //    string filePath = FileHandler.GetFilePath(newFileName, ExperienceManager.appFolderName);
+            //    StartCoroutine(FetchImage(filePath, newFileName, false));
+            //    //Debug.Log("Fetching image from cache: " + filePath);
+            //}
+            //else
+            //{
+            //    // Fetch new image from web and save to cache
+            //    StartCoroutine(FetchImage(newValue, newFileName, true));
+            //    //Debug.Log("Fetching image from web: " + newValue);
+            //}
+
+            return true;
         }
     }
 }

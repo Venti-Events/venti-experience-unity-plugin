@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 
 namespace Venti
 {
+    [RequireComponent(typeof(CacheManager))]
     public class SettingsManager : Singleton<SettingsManager>
     {
         public Experience.ExperienceManager experienceManager;
@@ -55,7 +56,7 @@ namespace Venti
         {
             if (hash != appHash)
             {
-                Debug.Log("Hashes mismatch. Re-fetch");
+                Debug.Log("App hashes mismatch. Re-fetch");
                 StartCoroutine(GetAppConfig(hash));
             }
             else
@@ -66,7 +67,13 @@ namespace Venti
         public void FetchThemeConfig(string hash)
         {
             if (hash != themeHash)
+            {
+                Debug.Log("Theme hashes mismatch. Re-fetch");
+                Debug.Log("Old hash: " +  themeHash + "\n New hash: " + hash);
                 StartCoroutine(GetThemeConfig(hash));
+            }
+            else
+                Debug.Log("Theme hash is the same, no need to fetch again.");
         }
 
         public void ParseHashesJson(string jsonResponse)
