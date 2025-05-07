@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using SimpleJSON;
 
 namespace Venti.Theme
 {
@@ -13,6 +14,30 @@ namespace Venti.Theme
         public ThemeButton buttons;
         public Surface surfaces;
         public Background background;
+        [SerializeField][ReadOnly] private string hash;
+
+        //public bool SetFromJson(JSONObject json)
+        //{
+        //    if (json == null)
+        //        throw new Exception("JSON is null for theme");
+
+        //    if (json["hash"] == null)
+        //        throw new Exception("No hash for theme");
+
+        //    if (json["hash"] == hash)
+        //        return false;
+
+        //    header.SetFromJson(json["header"]);
+        //    footer.SetFromJson(json["footer"]);
+        //    themeColors.SetFromJson(json["themeColors"]);
+        //    typography.SetFromJson(json["typography"]);
+        //    buttons.SetFromJson(json["buttons"]);
+        //    surfaces.SetFromJson(json["surfaces"]);
+        //    background.SetFromJson(json["background"]);
+        //    hash = json["hash"];
+
+        //    return true;
+        //}
 
         [Serializable]
         public class Header
@@ -20,6 +45,25 @@ namespace Venti.Theme
             public ThemeImage companyLogo;
             public ThemeImage eventLogo;
             public string hash;
+            //[SerializeField][ReadOnly] private string hash;
+
+            //public bool SetFromJson(JSONObject json)
+            //{
+            //    if (json == null)
+            //        throw new Exception("JSON is null for header");
+
+            //    if (json["hash"] == null)
+            //        throw new Exception("No hash for header");
+
+            //    if (json["hash"] == hash)
+            //        return false;
+
+            //    companyLogo.SetFromJson(json["companyLogo"]);
+            //    eventLogo.SetFromJson(json["eventLogo"]);
+            //    hash = json["hash"];
+
+            //    return true;
+            //}
         }
 
         [Serializable]
@@ -64,6 +108,7 @@ namespace Venti.Theme
                 public string family;
                 public FontVariant variants;
                 public float sizeAdjustment;    //???
+                public TMPro.TMP_FontAsset fontAsset;
 
                 [Serializable]
                 public class FontVariant

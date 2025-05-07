@@ -33,13 +33,13 @@ namespace Venti.Experience
             return json;
         }
 
-        public override bool SetFromJson(JSONObject json, bool useCache)
+        public override bool SetFromJson(JSONObject json)
         {
             //bool firstFetch = false;
             //if(hash == null) 
             //    firstFetch = true;
 
-            if (!base.SetFromJson(json, useCache))
+            if (!base.SetFromJson(json))
                 return false;
 
             string newValue;

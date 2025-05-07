@@ -17,45 +17,33 @@ namespace Venti
             return directoryPath;
         }
 
-        public static string GetFilePath(string filename, string folderName, bool isEditor = false)
+        public static string GetFilePath(string fileName, string folderName, bool isEditor = false)
         {
             string directoryPath = GetFolderPath(folderName, isEditor);
-            string validFileName = ConvertToValidFileName(filename);
+            string validFileName = ConvertToValidFileName(fileName);
             string filePath = Path.Combine(directoryPath, validFileName);
 
             return filePath;
         }
 
-        public static bool FileExists(string filename, string folderName, bool isEditor = false)
+        public static bool FileExists(string fileName, string folderName, bool isEditor = false)
         {
-            string filePath = GetFilePath(filename, folderName, isEditor);
+            string filePath = GetFilePath(fileName, folderName, isEditor);
             return File.Exists(filePath);
         }
 
-        public static void WriteString(string content, string filename, string folderName, bool isEditor = false)
+        public static void WriteString(string content, string fileName, string folderName, bool isEditor = false)
         {
             string directoryPath = GetFolderPath(folderName, isEditor);
-            string filePath = GetFilePath(filename, folderName, isEditor);
+            string filePath = GetFilePath(fileName, folderName, isEditor);
 
             try
             {
-                FileStream fileStream = null;
-
                 // Create folder if it does not exist
                 Directory.CreateDirectory(directoryPath);
 
-                // Open and use file
-                using (fileStream = File.Open(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-                {
-                    // Clear file contents
-                    fileStream.SetLength(0);
-
-                    byte[] bytes = System.Text.Encoding.UTF8.GetBytes(content);
-                    fileStream.Write(bytes, 0, bytes.Length);
-                    fileStream.Close();
-
-                    Debug.Log("File Saved Successfully at " + filePath);
-                }
+                // Open and write file
+                File.WriteAllText(filePath, content);
             }
             catch (Exception e)
             {
@@ -64,29 +52,18 @@ namespace Venti
             }
         }
 
-        public static void WriteBytes(byte[] bytes, string filename, string folderName, bool isEditor = false)
+        public static void WriteBytes(byte[] bytes, string fileName, string folderName, bool isEditor = false)
         {
             string directoryPath = GetFolderPath(folderName, isEditor);
-            string filePath = GetFilePath(filename, folderName, isEditor);
+            string filePath = GetFilePath(fileName, folderName, isEditor);
 
             try
             {
-                FileStream fileStream = null;
-
                 // Create folder if it does not exist
                 Directory.CreateDirectory(directoryPath);
 
-                // Open and use file
-                using (fileStream = File.Open(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-                {
-                    // Clear file contents
-                    fileStream.SetLength(0);
-
-                    fileStream.Write(bytes, 0, bytes.Length);
-                    fileStream.Close();
-
-                    Debug.Log("File Saved Successfully at " + filePath);
-                }
+                // Open and write file
+                File.WriteAllBytes(filePath, bytes);
             }
             catch (Exception e)
             {
@@ -95,11 +72,11 @@ namespace Venti
             }
         }
 
-        public static string ReadFile(string filename, string folderName, bool isEditor = false)
+        public static string ReadFile(string fileName, string folderName, bool isEditor = false)
         {
             try
             {
-                string filePath = GetFilePath(filename, folderName, isEditor);
+                string filePath = GetFilePath(fileName, folderName, isEditor);
                 if (!File.Exists(filePath))
                 {
                     Debug.LogWarning($"File not found: {filePath}");
@@ -116,11 +93,11 @@ namespace Venti
             }
         }
 
-        public static byte[] ReadFileBytes(string filename, string folderName, bool isEditor = false)
+        public static byte[] ReadFileBytes(string fileName, string folderName, bool isEditor = false)
         {
             try
             {
-                string filePath = GetFilePath(filename, folderName, isEditor);
+                string filePath = GetFilePath(fileName, folderName, isEditor);
                 if (!File.Exists(filePath))
                 {
                     Debug.LogWarning($"File not found: {filePath}");
@@ -137,9 +114,9 @@ namespace Venti
             }
         }
 
-        public static void DeleteFile(string filename, string folderName, bool isEditor = false)
+        public static void DeleteFile(string fileName, string folderName, bool isEditor = false)
         {
-            string filePath = GetFilePath(filename, folderName, isEditor);
+            string filePath = GetFilePath(fileName, folderName, isEditor);
             if (File.Exists(filePath))
                 File.Delete(filePath);
             else

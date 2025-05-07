@@ -73,14 +73,14 @@ namespace Venti.Experience
             return json;
         }
 
-        public override bool SetFromJson(JSONObject json, bool useCache)
+        public override bool SetFromJson(JSONObject json)
         {
             // Set id so BaseField does not trigger a mismatch exception
             // since we copy id from header
             id = json["id"];
 
             // Check whether hash has changed or not and update it
-            if (!base.SetFromJson(json, useCache))
+            if (!base.SetFromJson(json))
                 return false;
 
             if (json["value"] == null)
@@ -97,7 +97,7 @@ namespace Venti.Experience
 
             for (int i = 0; i < value.Length ; i++)
             {
-                value[i].SetFromJson(valueJson[i].AsObject, useCache);
+                value[i].SetFromJson(valueJson[i].AsObject);
             }
 
             return true;

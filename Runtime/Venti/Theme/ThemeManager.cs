@@ -17,6 +17,8 @@ namespace Venti.Theme
         public const string themeFolderName = "theme";
         private const string configFileName = "theme-config";
 
+        //public TMPro.TMP_Text testText;
+
         private void Start()
         {
             LoadFromLocalJson();
@@ -121,16 +123,30 @@ namespace Venti.Theme
 
                 // TODO: Dispose old texture
                 newHeader.companyLogo.image = theme.header.companyLogo.image;
-                CacheManager.Instance.GetImage(theme.header.companyLogo.imageUrl, newHeader.companyLogo.imageUrl, themeFolderName, (Texture2D tex) => { theme.header.companyLogo.image = tex; });
-                
+                CacheManager.Instance.GetImage(theme.header.companyLogo.imageUrl, newHeader.companyLogo.imageUrl, themeFolderName, (Texture2D tex) =>
+                {
+                    if (tex != null)
+                    {
+                        Destroy(theme.header.companyLogo.image);
+                        theme.header.companyLogo.image = tex;
+                    }
+                });
+
                 newHeader.eventLogo.image = theme.header.eventLogo.image;
-                CacheManager.Instance.GetImage(theme.header.eventLogo.imageUrl, newHeader.eventLogo.imageUrl, themeFolderName, (Texture2D tex) => { theme.header.eventLogo.image = tex; });
+                CacheManager.Instance.GetImage(theme.header.eventLogo.imageUrl, newHeader.eventLogo.imageUrl, themeFolderName, (Texture2D tex) =>
+                {
+                    if (tex != null)
+                    {
+                        Destroy(theme.header.eventLogo.image);
+                        theme.header.eventLogo.image = tex;
+                    }
+                });
                 theme.header = newHeader;
             }
 
             // Footer
-            if (theme.footer.hash != json["footer"]["hash"].ToString()) 
-            { 
+            if (theme.footer.hash != json["footer"]["hash"].ToString())
+            {
                 string newFooterStr = json["footer"].ToString();
                 Footer newFooter = JsonConvert.DeserializeObject<Footer>(newFooterStr);
                 // TODO load list of images
@@ -150,11 +166,26 @@ namespace Venti.Theme
             if (theme.typography.hash != json["typography"]["hash"].ToString())
             {
                 string newTypographyStr = json["typography"].ToString();
-                theme.typography = JsonConvert.DeserializeObject<Typography>(newTypographyStr);
-                ColorUtility.TryParseHtmlString(theme.typography.typeScales.heading.color, out theme.typography.typeScales.heading.colorValue);
-                ColorUtility.TryParseHtmlString(theme.typography.typeScales.subHeading.color, out theme.typography.typeScales.subHeading.colorValue);
-                ColorUtility.TryParseHtmlString(theme.typography.typeScales.body.color, out theme.typography.typeScales.body.colorValue);
-                ColorUtility.TryParseHtmlString(theme.typography.typeScales.caption.color, out theme.typography.typeScales.caption.colorValue);
+                Typography newTypography = JsonConvert.DeserializeObject<Typography>(newTypographyStr);
+                ColorUtility.TryParseHtmlString(newTypography.typeScales.heading.color, out newTypography.typeScales.heading.colorValue);
+                ColorUtility.TryParseHtmlString(newTypography.typeScales.subHeading.color, out newTypography.typeScales.subHeading.colorValue);
+                ColorUtility.TryParseHtmlString(newTypography.typeScales.body.color, out newTypography.typeScales.body.colorValue);
+                ColorUtility.TryParseHtmlString(newTypography.typeScales.caption.color, out newTypography.typeScales.caption.colorValue);
+
+                newTypography.headingFont.fontAsset = theme.typography.headingFont.fontAsset;
+                CacheManager.Instance.GetFont(theme.typography.headingFont.variants.regular, newTypography.headingFont.variants.regular, themeFolderName, (TMPro.TMP_FontAsset font) =>
+                {
+                    if (font != null)
+                    {
+                        Destroy(theme.typography.headingFont.fontAsset);
+                        theme.typography.headingFont.fontAsset = font;
+
+                        //testText.font = font;
+                        //testText.color = theme.typography.typeScales.heading.colorValue;
+                        //testText.ForceMeshUpdate();
+                    }
+                });
+                theme.typography = newTypography;
             }
 
             // Buttons

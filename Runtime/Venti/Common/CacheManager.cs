@@ -1,15 +1,20 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using Venti.Experience;
 using System.Web;
 using UnityEngine.Networking;
+using TMPro;
 
 namespace Venti
 {
     public class CacheManager : Singleton<CacheManager>
     {
         // TODO: Create a list of loading files and their callbacks. If single file is being loaded by multiple variables, then combine their callbacks and load only once.
+        Dictionary<string, Action<Texture2D>[]> imageActions = new Dictionary<string, Action<Texture2D>[]>();
+        Dictionary<string, Action<AudioClip>[]> audioActions = new Dictionary<string, Action<AudioClip>[]>();
+        Dictionary<string, Action<TMP_FontAsset>[]> fontActions = new Dictionary<string, Action<TMP_FontAsset>[]>();
 
         public bool GetImage(string oldUrl, string newUrl, string folderName, Action<Texture2D> callback, bool forceUpdate = false)
         {
@@ -20,11 +25,45 @@ namespace Venti
             try
             {
                 ResolvedPath resolvedFilePath = ResolveFilePathFromUrl(oldUrl, newUrl, folderName);
-                string fileName = resolvedFilePath.fileName;
-                string filePath = resolvedFilePath.filePath;
-                bool saveToCache = !resolvedFilePath.isCached;
+                StartCoroutine(FetchImage(resolvedFilePath.filePath, resolvedFilePath.fileName, folderName, resolvedFilePath.isCached, callback));
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(ex.Message);
+                return false;
+            }
+        }
 
-                StartCoroutine(FetchImage(filePath, fileName, folderName, saveToCache, callback));
+        public bool GetAudio(string oldUrl, string newUrl, string folderName, Action<AudioClip> callback, bool forceUpdate = false)
+        {
+            // File hasn't changed. No need to load again.
+            if (oldUrl == newUrl && !forceUpdate)
+                return false;
+
+            try
+            {
+                ResolvedPath resolvedFilePath = ResolveFilePathFromUrl(oldUrl, newUrl, folderName);
+                StartCoroutine(FetchAudio(resolvedFilePath.filePath, resolvedFilePath.fileName, folderName, resolvedFilePath.isCached, callback));
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(ex.Message);
+                return false;
+            }
+        }
+
+        public bool GetFont(string oldUrl, string newUrl, string folderName, Action<TMP_FontAsset> callback, bool forceUpdate = false)
+        {
+            // File hasn't changed. No need to load again.
+            if (oldUrl == newUrl && !forceUpdate)
+                return false;
+
+            try
+            {
+                ResolvedPath resolvedFilePath = ResolveFilePathFromUrl(oldUrl, newUrl, folderName);
+                StartCoroutine(FetchFont(resolvedFilePath.filePath, resolvedFilePath.fileName, folderName, resolvedFilePath.isCached, callback));
                 return true;
             }
             catch (Exception ex)
@@ -89,10 +128,9 @@ namespace Venti
             };
         }
 
-        IEnumerator FetchImage(string url, string fileName, string folderName, bool saveToCache, Action<Texture2D> callback)
+        IEnumerator FetchImage(string url, string fileName, string folderName, bool isCached, Action<Texture2D> callback)
         {
-            Debug.Log("Fetching image from web: " + url + " to " + fileName + " in " + folderName + " folder. Save to cache: " + saveToCache + ".");
-            //using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
+            //Debug.Log("Fetching image from web: " + url + " to " + fileName + " in " + folderName + " folder. Save to cache: " + saveToCache + ".");
             using (UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(url))
             {
                 // Request and wait for the desired page
@@ -101,27 +139,61 @@ namespace Venti
                 if (webRequest.result != UnityWebRequest.Result.Success)
                 {
                     Debug.LogError(webRequest.error);
+                    callback.Invoke(null);
+                    yield break;
                 }
-                else
+
+                if (!isCached)
                 {
-                    Texture2D tex = DownloadHandlerTexture.GetContent(webRequest);
-
-                    if (saveToCache)
-                    {
-                        byte[] bytes = webRequest.downloadHandler.data;
-                        FileHandler.WriteBytes(bytes, fileName, folderName);
-                        //Debug.Log("Saved image to cache: " + fileName);
-                    }
-
-                    callback.Invoke(tex);
+                    byte[] bytes = webRequest.downloadHandler.data;
+                    FileHandler.WriteBytes(bytes, fileName, folderName);
+                    //Debug.Log("Saved image to cache: " + fileName);
                 }
+
+                Texture2D tex = DownloadHandlerTexture.GetContent(webRequest);
+                callback.Invoke(tex);
             }
         }
 
-        IEnumerator FetchFont(string url, string fileName, string folderName, bool saveToCache, Action<Font> callback)
+        IEnumerator FetchAudio(string url, string fileName, string folderName, bool isCached, Action<AudioClip> callback)
         {
-            Debug.Log("Fetching image from web: " + url + " to " + fileName + " in " + folderName + " folder. Save to cache: " + saveToCache + ".");
-            //using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
+            string extension = fileName.Substring(fileName.LastIndexOf('.'));
+            AudioType audioType = AudioType.UNKNOWN;
+            if (extension == ".mp3")
+                audioType = AudioType.MPEG;
+            else if (extension == ".ogg")
+                audioType = AudioType.OGGVORBIS;
+            else if (extension == ".wav")
+                audioType = AudioType.WAV;
+
+            using (UnityWebRequest webRequest = UnityWebRequestMultimedia.GetAudioClip(url, audioType))
+            {
+                // Request and wait for the desired page
+                yield return webRequest.SendWebRequest();
+
+                if (webRequest.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.LogError(webRequest.error);
+                    callback.Invoke(null);
+                    yield break;
+                }
+
+                if (!isCached)
+                {
+                    byte[] bytes = webRequest.downloadHandler.data;
+                    FileHandler.WriteBytes(bytes, fileName, folderName);
+                    //Debug.Log("Saved audio to cache: " + fileName);
+                }
+
+                AudioClip audioClip = DownloadHandlerAudioClip.GetContent(webRequest);
+                callback.Invoke(audioClip);
+            }
+        }
+
+        // TODO: Fetch font
+        IEnumerator FetchFont(string url, string fileName, string folderName, bool isCached, Action<TMP_FontAsset> callback)
+        {
+            Debug.Log("Fetching font from web: " + url + " to " + fileName + " in " + folderName + " folder. Save to cache: " + isCached + ".");
             using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
             {
                 // Request and wait for the desired page
@@ -130,20 +202,29 @@ namespace Venti
                 if (webRequest.result != UnityWebRequest.Result.Success)
                 {
                     Debug.LogError(webRequest.error);
+                    callback.Invoke(null);
+                    yield break;
                 }
-                else
+
+                if (!isCached)
                 {
-                    //Font font = new Font(webRequest.downloadHandler.data(webRequest));
-
-                    //if (saveToCache)
-                    //{
-                    //    byte[] bytes = webRequest.downloadHandler.data;
-                    //    FileHandler.WriteBytes(bytes, fileName, folderName);
-                    //    //Debug.Log("Saved image to cache: " + fileName);
-                    //}
-
-                    //callback.Invoke(tex);
+                    byte[] bytes = webRequest.downloadHandler.data;
+                    FileHandler.WriteBytes(bytes, fileName, folderName);
+                    //Debug.Log("Saved font to cache: " + fileName);
                 }
+
+                string filePath = FileHandler.GetFilePath(fileName, folderName);
+                Font font = new Font(filePath);
+
+                if (font == null)
+                {
+                    Debug.LogError("Failed to load font from path: " + filePath);
+                    callback.Invoke(null);
+                    yield break;
+                }
+
+                TMP_FontAsset tmpFontAsset = TMP_FontAsset.CreateFontAsset(font);
+                callback.Invoke(tmpFontAsset);
             }
         }
 
