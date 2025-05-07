@@ -4,6 +4,7 @@ using SimpleJSON;
 using UnityEngine.Networking;
 using System.Collections;
 using System.Web;
+using Codice.Utils;
 
 namespace Venti.Experience
 {

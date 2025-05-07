@@ -19,15 +19,15 @@ public class QRSceneImporter
             return;
         }
 
-        CreateDirectoryIfNeeded("Assets/Scenes");
+        //CreateDirectoryIfNeeded("Assets/Scenes");
 
-        string error = AssetDatabase.CopyAsset(sourceScenePath, targetScenePath);
-        if (!string.IsNullOrEmpty(error))
-            Debug.LogError($"[QRSceneImporter] Failed to copy scene: {error}");
-        else
-            Debug.Log("[QRSceneImporter] QRScanScene copied to project successfully.");
+        ////string error = AssetDatabase.CopyAsset(sourceScenePath, targetScenePath);
+        //if (!string.IsNullOrEmpty(error))
+        //    Debug.LogError($"[QRSceneImporter] Failed to copy scene: {error}");
+        //else
+        //    Debug.Log("[QRSceneImporter] QRScanScene copied to project successfully.");
 
-        AssetDatabase.Refresh();
+        //AssetDatabase.Refresh();
     }
 
     private static string FindSceneInPackage()
