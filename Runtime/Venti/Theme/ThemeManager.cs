@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using SimpleJSON;
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using static Venti.Theme.Theme;
@@ -79,9 +80,11 @@ namespace Venti.Theme
                 // TODO: Check whether versions match
 
                 // Update all fields from json
-                if (SetFromJson(json, true))
+                if (SetFromJson(json))
                 {
-                    onThemeUpdate?.Invoke();
+                    // TODO: Only call onThemeUpdate if all theme elements have either passed or failed
+                    //onThemeUpdate?.Invoke();
+                    StartCoroutine(InvokeAfterDelay());
 
                     if (saveJson)
                         FileHandler.WriteString(json.ToString(), configFileName + ".json", themeFolderName);
@@ -95,6 +98,13 @@ namespace Venti.Theme
                 return false;
             }
         }
+
+        IEnumerator InvokeAfterDelay(float delay = 1f)
+        {
+            yield return new WaitForSeconds(delay);
+            onThemeUpdate?.Invoke();
+        }
+
 
         //[Serializable]
         //private class ThemeResponse
@@ -111,10 +121,13 @@ namespace Venti.Theme
         //    public Theme theme;
         //}
 
-        public bool SetFromJson(JSONObject json, bool useCache)
+        public bool SetFromJson(JSONObject json)
         {
             Debug.Log("Setting Theme from JSON");
 
+            theme.SetFromJson(json);
+
+            /*
             // Header
             if (theme.header.hash != json["header"]["hash"].ToString())
             {
@@ -222,42 +235,7 @@ namespace Venti.Theme
                 CacheManager.Instance.GetImage(theme.background.landscapeImageUrl, newBackground.landscapeImageUrl, themeFolderName, (Texture2D tex) => { newBackground.landscapeImage = tex; });
 
                 theme.background = newBackground;
-            }
-
-            //string decodedUrl = HttpUtility.UrlDecode(url);
-
-            //string oldFileName = null;
-            //string newFileName = null;
-
-            //// Extract file names from urls
-            //if (valueRaw != null)
-            //    oldFileName = valueRaw.Substring(valueRaw.LastIndexOf('/') + 1);
-            //newFileName = newValue.Substring(newValue.LastIndexOf('/') + 1);
-            ////Debug.Log("Old value: " + valueRaw);
-            ////Debug.Log("Old filename: " + oldFileName);
-
-            ////Debug.Log("New value: " + newValue);
-            ////Debug.Log("New filename: " + newFileName);
-
-            //valueRaw = newValue;
-
-            //// Delete old file
-            //if (oldFileName != null || oldFileName == "")
-            //    FileHandler.DeleteFile(oldFileName, ExperienceManager.appFolderName);
-
-            //if (FileHandler.FileExists(newFileName, ExperienceManager.appFolderName))
-            //{
-            //    // If fetched image exists in cache. e.g. first run
-            //    string filePath = FileHandler.GetFilePath(newFileName, ExperienceManager.appFolderName);
-            //    StartCoroutine(FetchImage(filePath, newFileName, false));
-            //    //Debug.Log("Fetching image from cache: " + filePath);
-            //}
-            //else
-            //{
-            //    // Fetch new image from web and save to cache
-            //    StartCoroutine(FetchImage(newValue, newFileName, true));
-            //    //Debug.Log("Fetching image from web: " + newValue);
-            //}
+            }*/
 
             return true;
         }

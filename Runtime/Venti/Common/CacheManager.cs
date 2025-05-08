@@ -12,20 +12,22 @@ namespace Venti
     public class CacheManager : Singleton<CacheManager>
     {
         // TODO: Create a list of loading files and their callbacks. If single file is being loaded by multiple variables, then combine their callbacks and load only once.
-        Dictionary<string, Action<Texture2D>[]> imageActions = new Dictionary<string, Action<Texture2D>[]>();
-        Dictionary<string, Action<AudioClip>[]> audioActions = new Dictionary<string, Action<AudioClip>[]>();
-        Dictionary<string, Action<TMP_FontAsset>[]> fontActions = new Dictionary<string, Action<TMP_FontAsset>[]>();
+        Dictionary<string, CachedAsset<Texture2D>> imageAssets = new Dictionary<string, CachedAsset<Texture2D>>();
+        Dictionary<string, CachedAsset<AudioClip>> audioActions = new Dictionary<string, CachedAsset<AudioClip>>();
+        Dictionary<string, CachedAsset<TMP_FontAsset>> fontActions = new Dictionary<string, CachedAsset<TMP_FontAsset>>();
 
         public bool GetImage(string oldUrl, string newUrl, string folderName, Action<Texture2D> callback, bool forceUpdate = false)
         {
             // File hasn't changed. No need to load again.
-            if (oldUrl == newUrl && !forceUpdate)
+            if (!forceUpdate && oldUrl == newUrl)
                 return false;
 
             try
             {
-                ResolvedPath resolvedFilePath = ResolveFilePathFromUrl(oldUrl, newUrl, folderName);
-                StartCoroutine(FetchImage(resolvedFilePath.filePath, resolvedFilePath.fileName, folderName, resolvedFilePath.isCached, callback));
+                FileDetails fileDetails = GetFileDetailsFromUrl(oldUrl, newUrl, folderName);
+                if (forceUpdate)
+                    fileDetails.isCached = false;
+                StartCoroutine(FetchImage(fileDetails, callback));
                 return true;
             }
             catch (Exception ex)
@@ -38,13 +40,15 @@ namespace Venti
         public bool GetAudio(string oldUrl, string newUrl, string folderName, Action<AudioClip> callback, bool forceUpdate = false)
         {
             // File hasn't changed. No need to load again.
-            if (oldUrl == newUrl && !forceUpdate)
+            if (!forceUpdate && oldUrl == newUrl)
                 return false;
 
             try
             {
-                ResolvedPath resolvedFilePath = ResolveFilePathFromUrl(oldUrl, newUrl, folderName);
-                StartCoroutine(FetchAudio(resolvedFilePath.filePath, resolvedFilePath.fileName, folderName, resolvedFilePath.isCached, callback));
+                FileDetails fileDetails = GetFileDetailsFromUrl(oldUrl, newUrl, folderName);
+                if (forceUpdate)
+                    fileDetails.isCached = false;
+                StartCoroutine(FetchAudio(fileDetails, callback));
                 return true;
             }
             catch (Exception ex)
@@ -62,8 +66,10 @@ namespace Venti
 
             try
             {
-                ResolvedPath resolvedFilePath = ResolveFilePathFromUrl(oldUrl, newUrl, folderName);
-                StartCoroutine(FetchFont(resolvedFilePath.filePath, resolvedFilePath.fileName, folderName, resolvedFilePath.isCached, callback));
+                FileDetails fileDetails = GetFileDetailsFromUrl(oldUrl, newUrl, folderName);
+                if (forceUpdate)
+                    fileDetails.isCached = false;
+                StartCoroutine(FetchFont(fileDetails, callback));
                 return true;
             }
             catch (Exception ex)
@@ -73,24 +79,23 @@ namespace Venti
             }
         }
 
-        ResolvedPath ResolveFilePathFromUrl(string oldUrl, string newUrl, string folderName)
+        FileDetails GetFileDetailsFromUrl(string oldUrl, string newUrl, string folderName)
         {
             string oldFileName = null;
             string newFileName = null;
 
             // Extract file names from urls
             string oldUrlDecoded;
-            if (oldUrl != null)
+            if (!string.IsNullOrEmpty(oldUrl))
             {
                 oldUrlDecoded = HttpUtility.UrlDecode(oldUrl);
                 oldFileName = oldUrlDecoded.Substring(oldUrlDecoded.LastIndexOf('/') + 1);
             }
 
             string newUrlDecoded;
-            if (newUrl == null)
+            if (string.IsNullOrEmpty(newUrl))
             {
-                Debug.LogWarning("A theme item has null value");
-                throw new Exception("A theme item has null value");
+                throw new Exception("Url for fetching a file from cache is null");
             }
             else
             {
@@ -106,32 +111,29 @@ namespace Venti
             {
                 // If file to fetch exists in cache. e.g. it's a first run
                 string filePath = FileHandler.GetFilePath(newFileName, folderName);
-                return new ResolvedPath
+                return new FileDetails
                 {
                     fileName = newFileName,
+                    folderName = folderName,
                     filePath = filePath,
                     isCached = true
                 };
-                //StartCoroutine(FetchImage(filePath, newFileName, false));
-                //Debug.Log("Fetching image from cache: " + filePath);
             }
 
-            // Fetch new image from web and save to cache
-            //StartCoroutine(FetchImage(newValue, newFileName, true));
-            //Debug.Log("Fetching image from web: " + newValue);
-
-            return new ResolvedPath
+            // Fetch new image from web
+            return new FileDetails
             {
                 fileName = newFileName,
+                folderName = folderName,
                 filePath = newUrlDecoded,
                 isCached = false
             };
         }
 
-        IEnumerator FetchImage(string url, string fileName, string folderName, bool isCached, Action<Texture2D> callback)
+        IEnumerator FetchImage(FileDetails fileDetails, Action<Texture2D> callback)
         {
-            //Debug.Log("Fetching image from web: " + url + " to " + fileName + " in " + folderName + " folder. Save to cache: " + saveToCache + ".");
-            using (UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(url))
+            //Debug.Log("Fetching image from web: " + url + " to " + fileName + " in " + folderName + " folder. Is in cache: " + isCached + ".");
+            using (UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(fileDetails.filePath))
             {
                 // Request and wait for the desired page
                 yield return webRequest.SendWebRequest();
@@ -143,10 +145,10 @@ namespace Venti
                     yield break;
                 }
 
-                if (!isCached)
+                if (!fileDetails.isCached)
                 {
                     byte[] bytes = webRequest.downloadHandler.data;
-                    FileHandler.WriteBytes(bytes, fileName, folderName);
+                    FileHandler.WriteBytes(bytes, fileDetails.fileName, fileDetails.folderName);
                     //Debug.Log("Saved image to cache: " + fileName);
                 }
 
@@ -155,9 +157,9 @@ namespace Venti
             }
         }
 
-        IEnumerator FetchAudio(string url, string fileName, string folderName, bool isCached, Action<AudioClip> callback)
+        IEnumerator FetchAudio(FileDetails fileDetails, Action<AudioClip> callback)
         {
-            string extension = fileName.Substring(fileName.LastIndexOf('.'));
+            string extension = fileDetails.fileName.Substring(fileDetails.fileName.LastIndexOf('.'));
             AudioType audioType = AudioType.UNKNOWN;
             if (extension == ".mp3")
                 audioType = AudioType.MPEG;
@@ -166,7 +168,7 @@ namespace Venti
             else if (extension == ".wav")
                 audioType = AudioType.WAV;
 
-            using (UnityWebRequest webRequest = UnityWebRequestMultimedia.GetAudioClip(url, audioType))
+            using (UnityWebRequest webRequest = UnityWebRequestMultimedia.GetAudioClip(fileDetails.filePath, audioType))
             {
                 // Request and wait for the desired page
                 yield return webRequest.SendWebRequest();
@@ -178,11 +180,10 @@ namespace Venti
                     yield break;
                 }
 
-                if (!isCached)
+                if (!fileDetails.isCached)
                 {
                     byte[] bytes = webRequest.downloadHandler.data;
-                    FileHandler.WriteBytes(bytes, fileName, folderName);
-                    //Debug.Log("Saved audio to cache: " + fileName);
+                    FileHandler.WriteBytes(bytes, fileDetails.fileName, fileDetails.folderName);
                 }
 
                 AudioClip audioClip = DownloadHandlerAudioClip.GetContent(webRequest);
@@ -190,11 +191,10 @@ namespace Venti
             }
         }
 
-        // TODO: Fetch font
-        IEnumerator FetchFont(string url, string fileName, string folderName, bool isCached, Action<TMP_FontAsset> callback)
+        IEnumerator FetchFont(FileDetails fileDetails, Action<TMP_FontAsset> callback)
         {
-            Debug.Log("Fetching font from web: " + url + " to " + fileName + " in " + folderName + " folder. Save to cache: " + isCached + ".");
-            using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
+            //Debug.Log("Fetching font from web: " + fileInfo.filePath + " to " + fileInfo.fileName + " in " + fileInfo.folderName + " folder. Save to cache: " + fileInfo.isCached + ".");
+            using (UnityWebRequest webRequest = UnityWebRequest.Get(fileDetails.filePath))
             {
                 // Request and wait for the desired page
                 yield return webRequest.SendWebRequest();
@@ -206,14 +206,13 @@ namespace Venti
                     yield break;
                 }
 
-                if (!isCached)
+                if (!fileDetails.isCached)
                 {
                     byte[] bytes = webRequest.downloadHandler.data;
-                    FileHandler.WriteBytes(bytes, fileName, folderName);
-                    //Debug.Log("Saved font to cache: " + fileName);
+                    FileHandler.WriteBytes(bytes, fileDetails.fileName, fileDetails.folderName);
                 }
 
-                string filePath = FileHandler.GetFilePath(fileName, folderName);
+                string filePath = FileHandler.GetFilePath(fileDetails.fileName, fileDetails.folderName);
                 Font font = new Font(filePath);
 
                 if (font == null)
@@ -228,11 +227,21 @@ namespace Venti
             }
         }
 
-        private struct ResolvedPath
+        private struct FileDetails
         {
             public string fileName;
+            public string folderName;
             public string filePath;
             public bool isCached;
+        }
+
+        private class CachedAsset<T>
+        {
+            public T asset;
+            public string url;
+            public FileDetails fileDetails;
+            public bool isLoading = false;
+            public List<Action<T>> Callbacks = new List<Action<T>>();
         }
     }
 }
