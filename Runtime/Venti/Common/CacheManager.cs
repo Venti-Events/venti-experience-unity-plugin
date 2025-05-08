@@ -103,18 +103,20 @@ namespace Venti
                 newFileName = newUrlDecoded.Substring(newUrlDecoded.LastIndexOf('/') + 1);
             }
 
+            string assetFolderName = folderName + "/Assets";
+
             // Delete old file
             if (!string.IsNullOrEmpty(oldFileName))
-                FileHandler.DeleteFile(oldFileName, folderName);
+                FileHandler.DeleteFile(oldFileName, assetFolderName);
 
-            if (FileHandler.FileExists(newFileName, folderName))
+            if (FileHandler.FileExists(newFileName, assetFolderName))
             {
                 // If file to fetch exists in cache. e.g. it's a first run
-                string filePath = FileHandler.GetFilePath(newFileName, folderName);
+                string filePath = FileHandler.GetFilePath(newFileName, assetFolderName);
                 return new FileDetails
                 {
                     fileName = newFileName,
-                    folderName = folderName,
+                    folderName = assetFolderName,
                     filePath = filePath,
                     isCached = true
                 };
