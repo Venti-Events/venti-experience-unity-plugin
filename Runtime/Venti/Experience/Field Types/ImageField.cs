@@ -34,13 +34,9 @@ namespace Venti.Experience
             return json;
         }
 
-        public override bool SetFromJson(JSONObject json, bool useCache)
+        public override bool SetFromJson(JSONObject json)
         {
-            //bool firstFetch = false;
-            //if(hash == null) 
-            //    firstFetch = true;
-
-            if (!base.SetFromJson(json, useCache))
+            if (!base.SetFromJson(json))
                 return false;
 
             string newValue;
@@ -50,21 +46,26 @@ namespace Venti.Experience
                 Debug.LogWarning("value is null in JSON for " + id);
             }
             else
-                newValue = HttpUtility.UrlDecode(json["value"].Value);
+                newValue = json["value"].Value;
 
-            string oldFileName = null;
+            // TODO: Use cache manager
+            CacheManager.Instance.GetImage(valueRaw, newValue, ExperienceManager.appFolderName, (texture) =>
+            {
+                valueRaw = newValue;
+                value = texture;
+
+                onChange.Invoke(value);
+                onChangeWithId.Invoke(id, value);
+            });
+
+            /*string oldFileName = null;
             string newFileName = null;
 
             // Extract file names from urls
             if (valueRaw != null)
                 oldFileName = valueRaw.Substring(valueRaw.LastIndexOf('/') + 1);
             newFileName = newValue.Substring(newValue.LastIndexOf('/') + 1);
-            //Debug.Log("Old value: " + valueRaw);
-            //Debug.Log("Old filename: " + oldFileName);
-
-            //Debug.Log("New value: " + newValue);
-            //Debug.Log("New filename: " + newFileName);
-
+            
             valueRaw = newValue;
 
             // Delete old file
@@ -83,38 +84,38 @@ namespace Venti.Experience
                 // Fetch new image from web and save to cache
                 StartCoroutine(FetchImage(newValue, newFileName, true));
                 //Debug.Log("Fetching image from web: " + newValue);
-            }
+            }*/
 
             return true;
         }
 
-        IEnumerator FetchImage(string url, string fileName, bool saveToCache)
-        {
-            //using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
-            using (UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(url))
-            {
-                // Request and wait for the desired page
-                yield return webRequest.SendWebRequest();
+        //IEnumerator FetchImage(string url, string fileName, bool saveToCache)
+        //{
+        //    //using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
+        //    using (UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(url))
+        //    {
+        //        // Request and wait for the desired page
+        //        yield return webRequest.SendWebRequest();
 
-                if (webRequest.result != UnityWebRequest.Result.Success)
-                {
-                    Debug.LogError(webRequest.error);
-                }
-                else
-                {
-                    value = DownloadHandlerTexture.GetContent(webRequest);
+        //        if (webRequest.result != UnityWebRequest.Result.Success)
+        //        {
+        //            Debug.LogError(webRequest.error);
+        //        }
+        //        else
+        //        {
+        //            value = DownloadHandlerTexture.GetContent(webRequest);
 
-                    if (saveToCache)
-                    {
-                        byte[] bytes = webRequest.downloadHandler.data;
-                        FileHandler.WriteBytes(bytes, fileName, ExperienceManager.appFolderName);
-                        //Debug.Log("Saved image to cache: " + fileName);
-                    }
+        //            if (saveToCache)
+        //            {
+        //                byte[] bytes = webRequest.downloadHandler.data;
+        //                FileHandler.WriteBytes(bytes, fileName, ExperienceManager.appFolderName);
+        //                //Debug.Log("Saved image to cache: " + fileName);
+        //            }
 
-                    onChange.Invoke(value);
-                    onChangeWithId.Invoke(id, value);
-                }
-            }
-        }
+        //            onChange.Invoke(value);
+        //            onChangeWithId.Invoke(id, value);
+        //        }
+        //    }
+        //}
     }
 }

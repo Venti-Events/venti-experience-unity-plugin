@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using SimpleJSON;
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using static Venti.Theme.Theme;
@@ -16,6 +17,8 @@ namespace Venti.Theme
         // JSON File Path
         public const string themeFolderName = "theme";
         private const string configFileName = "theme-config";
+
+        //public TMPro.TMP_Text testText;
 
         private void Start()
         {
@@ -77,9 +80,11 @@ namespace Venti.Theme
                 // TODO: Check whether versions match
 
                 // Update all fields from json
-                if (SetFromJson(json, true))
+                if (SetFromJson(json))
                 {
-                    onThemeUpdate?.Invoke();
+                    // TODO: Only call onThemeUpdate if all theme elements have either passed or failed
+                    //onThemeUpdate?.Invoke();
+                    StartCoroutine(InvokeAfterDelay());
 
                     if (saveJson)
                         FileHandler.WriteString(json.ToString(), configFileName + ".json", themeFolderName);
@@ -93,6 +98,13 @@ namespace Venti.Theme
                 return false;
             }
         }
+
+        IEnumerator InvokeAfterDelay(float delay = 1f)
+        {
+            yield return new WaitForSeconds(delay);
+            onThemeUpdate?.Invoke();
+        }
+
 
         //[Serializable]
         //private class ThemeResponse
@@ -109,10 +121,13 @@ namespace Venti.Theme
         //    public Theme theme;
         //}
 
-        public bool SetFromJson(JSONObject json, bool useCache)
+        public bool SetFromJson(JSONObject json)
         {
             Debug.Log("Setting Theme from JSON");
 
+            theme.SetFromJson(json);
+
+            /*
             // Header
             if (theme.header.hash != json["header"]["hash"].ToString())
             {
@@ -121,16 +136,30 @@ namespace Venti.Theme
 
                 // TODO: Dispose old texture
                 newHeader.companyLogo.image = theme.header.companyLogo.image;
-                CacheManager.Instance.GetImage(theme.header.companyLogo.imageUrl, newHeader.companyLogo.imageUrl, themeFolderName, (Texture2D tex) => { theme.header.companyLogo.image = tex; });
-                
+                CacheManager.Instance.GetImage(theme.header.companyLogo.imageUrl, newHeader.companyLogo.imageUrl, themeFolderName, (Texture2D tex) =>
+                {
+                    if (tex != null)
+                    {
+                        Destroy(theme.header.companyLogo.image);
+                        theme.header.companyLogo.image = tex;
+                    }
+                });
+
                 newHeader.eventLogo.image = theme.header.eventLogo.image;
-                CacheManager.Instance.GetImage(theme.header.eventLogo.imageUrl, newHeader.eventLogo.imageUrl, themeFolderName, (Texture2D tex) => { theme.header.eventLogo.image = tex; });
+                CacheManager.Instance.GetImage(theme.header.eventLogo.imageUrl, newHeader.eventLogo.imageUrl, themeFolderName, (Texture2D tex) =>
+                {
+                    if (tex != null)
+                    {
+                        Destroy(theme.header.eventLogo.image);
+                        theme.header.eventLogo.image = tex;
+                    }
+                });
                 theme.header = newHeader;
             }
 
             // Footer
-            if (theme.footer.hash != json["footer"]["hash"].ToString()) 
-            { 
+            if (theme.footer.hash != json["footer"]["hash"].ToString())
+            {
                 string newFooterStr = json["footer"].ToString();
                 Footer newFooter = JsonConvert.DeserializeObject<Footer>(newFooterStr);
                 // TODO load list of images
@@ -150,11 +179,26 @@ namespace Venti.Theme
             if (theme.typography.hash != json["typography"]["hash"].ToString())
             {
                 string newTypographyStr = json["typography"].ToString();
-                theme.typography = JsonConvert.DeserializeObject<Typography>(newTypographyStr);
-                ColorUtility.TryParseHtmlString(theme.typography.typeScales.heading.color, out theme.typography.typeScales.heading.colorValue);
-                ColorUtility.TryParseHtmlString(theme.typography.typeScales.subHeading.color, out theme.typography.typeScales.subHeading.colorValue);
-                ColorUtility.TryParseHtmlString(theme.typography.typeScales.body.color, out theme.typography.typeScales.body.colorValue);
-                ColorUtility.TryParseHtmlString(theme.typography.typeScales.caption.color, out theme.typography.typeScales.caption.colorValue);
+                Typography newTypography = JsonConvert.DeserializeObject<Typography>(newTypographyStr);
+                ColorUtility.TryParseHtmlString(newTypography.typeScales.heading.color, out newTypography.typeScales.heading.colorValue);
+                ColorUtility.TryParseHtmlString(newTypography.typeScales.subHeading.color, out newTypography.typeScales.subHeading.colorValue);
+                ColorUtility.TryParseHtmlString(newTypography.typeScales.body.color, out newTypography.typeScales.body.colorValue);
+                ColorUtility.TryParseHtmlString(newTypography.typeScales.caption.color, out newTypography.typeScales.caption.colorValue);
+
+                newTypography.headingFont.fontAsset = theme.typography.headingFont.fontAsset;
+                CacheManager.Instance.GetFont(theme.typography.headingFont.variants.regular, newTypography.headingFont.variants.regular, themeFolderName, (TMPro.TMP_FontAsset font) =>
+                {
+                    if (font != null)
+                    {
+                        Destroy(theme.typography.headingFont.fontAsset);
+                        theme.typography.headingFont.fontAsset = font;
+
+                        //testText.font = font;
+                        //testText.color = theme.typography.typeScales.heading.colorValue;
+                        //testText.ForceMeshUpdate();
+                    }
+                });
+                theme.typography = newTypography;
             }
 
             // Buttons
@@ -191,42 +235,7 @@ namespace Venti.Theme
                 CacheManager.Instance.GetImage(theme.background.landscapeImageUrl, newBackground.landscapeImageUrl, themeFolderName, (Texture2D tex) => { newBackground.landscapeImage = tex; });
 
                 theme.background = newBackground;
-            }
-
-            //string decodedUrl = HttpUtility.UrlDecode(url);
-
-            //string oldFileName = null;
-            //string newFileName = null;
-
-            //// Extract file names from urls
-            //if (valueRaw != null)
-            //    oldFileName = valueRaw.Substring(valueRaw.LastIndexOf('/') + 1);
-            //newFileName = newValue.Substring(newValue.LastIndexOf('/') + 1);
-            ////Debug.Log("Old value: " + valueRaw);
-            ////Debug.Log("Old filename: " + oldFileName);
-
-            ////Debug.Log("New value: " + newValue);
-            ////Debug.Log("New filename: " + newFileName);
-
-            //valueRaw = newValue;
-
-            //// Delete old file
-            //if (oldFileName != null || oldFileName == "")
-            //    FileHandler.DeleteFile(oldFileName, ExperienceManager.appFolderName);
-
-            //if (FileHandler.FileExists(newFileName, ExperienceManager.appFolderName))
-            //{
-            //    // If fetched image exists in cache. e.g. first run
-            //    string filePath = FileHandler.GetFilePath(newFileName, ExperienceManager.appFolderName);
-            //    StartCoroutine(FetchImage(filePath, newFileName, false));
-            //    //Debug.Log("Fetching image from cache: " + filePath);
-            //}
-            //else
-            //{
-            //    // Fetch new image from web and save to cache
-            //    StartCoroutine(FetchImage(newValue, newFileName, true));
-            //    //Debug.Log("Fetching image from web: " + newValue);
-            //}
+            }*/
 
             return true;
         }

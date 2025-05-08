@@ -140,7 +140,7 @@ namespace Venti.Experience
                         try
                         {
                             JSONObject fetchedField = fetchedFields[i].AsObject;
-                            fields[i].SetFromJson(fetchedField, true);
+                            fields[i].SetFromJson(fetchedField);
                         }
                         catch (Exception e)
                         {

@@ -47,7 +47,7 @@ namespace Venti.Experience
             return json;
         }
 
-        public virtual bool SetFromJson(JSONObject json, bool useCache)
+        public virtual bool SetFromJson(JSONObject json)
         {
             if (json == null)
                 throw new Exception("JSON is null for field: " + _name + " (" + id + ")");

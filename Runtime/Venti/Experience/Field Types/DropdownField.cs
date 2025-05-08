@@ -47,9 +47,9 @@ namespace Venti.Experience
             return json;
         }
 
-        public override bool SetFromJson(JSONObject json, bool useCache)
+        public override bool SetFromJson(JSONObject json)
         {
-            if (!base.SetFromJson(json, useCache))
+            if (!base.SetFromJson(json))
                 return false;
 
             if (json["value"] == null)

@@ -3,10 +3,12 @@ using UnityEngine;
 using UnityEngine.Networking;
 using SimpleJSON;
 using UnityEngine.SceneManagement;
+using PimDeWitte.UnityMainThreadDispatcher;
 
 namespace Venti
 {
     [RequireComponent(typeof(CacheManager))]
+    [RequireComponent(typeof(UnityMainThreadDispatcher))]
     public class SettingsManager : Singleton<SettingsManager>
     {
         public Experience.ExperienceManager experienceManager;
@@ -46,10 +48,10 @@ namespace Venti
 
         #region PUBLIC_FUNCTIONS
         // Fetch the hashes from the server
-        public void FetchHashes()
-        {
-            StartCoroutine(GetHashes());
-        }
+        //public void FetchHashes()
+        //{
+        //    StartCoroutine(GetHashes());
+        //}
 
         // Fetch app config
         public void FetchAppConfig(string hash)
@@ -109,25 +111,25 @@ namespace Venti
 
         }
 
-        private IEnumerator GetHashes()
-        {
-            string url = serverUrl + getAppAndThemeHashesUrl;
+        //private IEnumerator GetHashes()
+        //{
+        //    string url = serverUrl + getAppAndThemeHashesUrl;
 
-            using (UnityWebRequest www = UnityWebRequest.Get(url))
-            {
-                www.SetRequestHeader("Authorization", "Bearer " + appKey);
-                yield return www.SendWebRequest();
+        //    using (UnityWebRequest www = UnityWebRequest.Get(url))
+        //    {
+        //        www.SetRequestHeader("Authorization", "Bearer " + appKey);
+        //        yield return www.SendWebRequest();
 
-                if (www.result != UnityWebRequest.Result.Success)
-                {
-                    Debug.LogError("Error fetching hashes: " + www.error);
-                }
-                else
-                {
-                    ParseHashesJson(www.downloadHandler.text);
-                }
-            }
-        }
+        //        if (www.result != UnityWebRequest.Result.Success)
+        //        {
+        //            Debug.LogError("Error fetching hashes: " + www.error);
+        //        }
+        //        else
+        //        {
+        //            ParseHashesJson(www.downloadHandler.text);
+        //        }
+        //    }
+        //}
 
         private IEnumerator GetAppConfig(string hash)
         {

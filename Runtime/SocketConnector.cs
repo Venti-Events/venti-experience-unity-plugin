@@ -59,10 +59,16 @@ public class SocketConnector: IDisposable
             UnityMainThreadDispatcher.Instance().Enqueue(FetchThemeConfig(hash));
         });
 
-        client.OnConnected += async (sender, e) =>
+        client.OnConnected += (sender, e) =>
         {
             Debug.Log("Connected to server!");
         };
+
+        client.OnDisconnected += (sender, e) =>
+        {
+            Debug.Log("Disconnected from server!");
+        };
+
         client.ConnectAsync();
     }
 
