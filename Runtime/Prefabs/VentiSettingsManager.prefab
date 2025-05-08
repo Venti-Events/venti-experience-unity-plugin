@@ -734,7 +734,7 @@ GameObject:
   - component: {fileID: 6367581535634959282}
   - component: {fileID: 1512758369071423142}
   m_Layer: 0
-  m_Name: Venti Settings Manager
+  m_Name: VentiSettingsManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
