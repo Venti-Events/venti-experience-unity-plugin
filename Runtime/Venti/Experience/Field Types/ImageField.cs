@@ -1,10 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
 using SimpleJSON;
-using UnityEngine.Networking;
-using System.Collections;
-using System.Web;
-using Codice.Utils;
 
 namespace Venti.Experience
 {
@@ -48,7 +44,6 @@ namespace Venti.Experience
             else
                 newValue = json["value"].Value;
 
-            // TODO: Use cache manager
             CacheManager.Instance.GetImage(valueRaw, newValue, ExperienceManager.appFolderName, (texture) =>
             {
                 valueRaw = newValue;
@@ -58,64 +53,7 @@ namespace Venti.Experience
                 onChangeWithId.Invoke(id, value);
             });
 
-            /*string oldFileName = null;
-            string newFileName = null;
-
-            // Extract file names from urls
-            if (valueRaw != null)
-                oldFileName = valueRaw.Substring(valueRaw.LastIndexOf('/') + 1);
-            newFileName = newValue.Substring(newValue.LastIndexOf('/') + 1);
-            
-            valueRaw = newValue;
-
-            // Delete old file
-            if (!string.IsNullOrEmpty(oldFileName))
-                FileHandler.DeleteFile(oldFileName, ExperienceManager.appFolderName);
-
-            if (FileHandler.FileExists(newFileName, ExperienceManager.appFolderName))
-            {
-                // If fetched image exists in cache. e.g. first run
-                string filePath = FileHandler.GetFilePath(newFileName, ExperienceManager.appFolderName);
-                StartCoroutine(FetchImage(filePath, newFileName, false));
-                //Debug.Log("Fetching image from cache: " + filePath);
-            }
-            else
-            {
-                // Fetch new image from web and save to cache
-                StartCoroutine(FetchImage(newValue, newFileName, true));
-                //Debug.Log("Fetching image from web: " + newValue);
-            }*/
-
             return true;
         }
-
-        //IEnumerator FetchImage(string url, string fileName, bool saveToCache)
-        //{
-        //    //using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
-        //    using (UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(url))
-        //    {
-        //        // Request and wait for the desired page
-        //        yield return webRequest.SendWebRequest();
-
-        //        if (webRequest.result != UnityWebRequest.Result.Success)
-        //        {
-        //            Debug.LogError(webRequest.error);
-        //        }
-        //        else
-        //        {
-        //            value = DownloadHandlerTexture.GetContent(webRequest);
-
-        //            if (saveToCache)
-        //            {
-        //                byte[] bytes = webRequest.downloadHandler.data;
-        //                FileHandler.WriteBytes(bytes, fileName, ExperienceManager.appFolderName);
-        //                //Debug.Log("Saved image to cache: " + fileName);
-        //            }
-
-        //            onChange.Invoke(value);
-        //            onChangeWithId.Invoke(id, value);
-        //        }
-        //    }
-        //}
     }
 }

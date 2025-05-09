@@ -69,6 +69,11 @@ public class SocketConnector: IDisposable
             Debug.Log("Disconnected from server!");
         };
 
+        client.OnError += (sender, e) =>
+        {
+            Debug.Log("Socket error: " + e.ToString());
+        };
+
         client.ConnectAsync();
     }
 

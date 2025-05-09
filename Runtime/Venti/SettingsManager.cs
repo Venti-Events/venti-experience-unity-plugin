@@ -27,16 +27,16 @@ namespace Venti
 
         void Start()
         {
-            if (PlayerPrefs.HasKey("appKey"))
-            {
-                appKey = PlayerPrefs.GetString("appKey");
-                Debug.Log($"Loaded saved appKey: {appKey}");
-            }
-            else
-            {
-                SceneManager.LoadScene("QRScanScene");
-                Debug.LogError("PlayerPrefs doesn't have appKey saved");
-            }
+            //if (PlayerPrefs.HasKey("appKey"))
+            //{
+            //    appKey = PlayerPrefs.GetString("appKey");
+            //    Debug.Log($"Loaded saved appKey: {appKey}");
+            //}
+            //else
+            //{
+            //    SceneManager.LoadScene("QRScanScene");
+            //    Debug.LogError("PlayerPrefs doesn't have appKey saved");
+            //}
 
             appHash = PlayerPrefs.GetString("appHash", "");
             themeHash = PlayerPrefs.GetString("themeHash", "");
@@ -45,13 +45,21 @@ namespace Venti
             socket = new SocketConnector(serverUrl, appKey);
         }
 
+        private void Update()
+        {
+            if(Input.GetKeyDown(KeyCode.F5))
+            {
+                Debug.Log("Force fetching hashes from server.");
+                FetchHashes();
+            }
+        }
 
         #region PUBLIC_FUNCTIONS
         // Fetch the hashes from the server
-        //public void FetchHashes()
-        //{
-        //    StartCoroutine(GetHashes());
-        //}
+        public void FetchHashes()
+        {
+            StartCoroutine(GetHashes());
+        }
 
         // Fetch app config
         public void FetchAppConfig(string hash)
@@ -111,25 +119,25 @@ namespace Venti
 
         }
 
-        //private IEnumerator GetHashes()
-        //{
-        //    string url = serverUrl + getAppAndThemeHashesUrl;
+        private IEnumerator GetHashes()
+        {
+            string url = serverUrl + getAppAndThemeHashesUrl;
 
-        //    using (UnityWebRequest www = UnityWebRequest.Get(url))
-        //    {
-        //        www.SetRequestHeader("Authorization", "Bearer " + appKey);
-        //        yield return www.SendWebRequest();
+            using (UnityWebRequest www = UnityWebRequest.Get(url))
+            {
+                www.SetRequestHeader("Authorization", "Bearer " + appKey);
+                yield return www.SendWebRequest();
 
-        //        if (www.result != UnityWebRequest.Result.Success)
-        //        {
-        //            Debug.LogError("Error fetching hashes: " + www.error);
-        //        }
-        //        else
-        //        {
-        //            ParseHashesJson(www.downloadHandler.text);
-        //        }
-        //    }
-        //}
+                if (www.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.LogError("Error fetching hashes: " + www.error);
+                }
+                else
+                {
+                    ParseHashesJson(www.downloadHandler.text);
+                }
+            }
+        }
 
         private IEnumerator GetAppConfig(string hash)
         {

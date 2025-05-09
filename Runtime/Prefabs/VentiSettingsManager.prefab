@@ -732,7 +732,7 @@ GameObject:
   - component: {fileID: 5489115328174921471}
   - component: {fileID: 9221337731318125250}
   - component: {fileID: 6367581535634959282}
-  - component: {fileID: 1512758369071423142}
+  - component: {fileID: 34657763268648166}
   m_Layer: 0
   m_Name: VentiSettingsManager
   m_TagString: Untagged
@@ -784,7 +784,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f688a80fbdbf43b4da4cfabe5dd643b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1512758369071423142
+--- !u!114 &34657763268648166
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -793,7 +793,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8241541060210376183}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 16173428f7358476fa784f899e396692, type: 3}
+  m_Script: {fileID: 11500000, guid: e4294dcfb0a0ded448e589db5caf57b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &8295223825922678252
@@ -935,8 +935,19 @@ MonoBehaviour:
     hash: 
   onThemeUpdate:
     m_PersistentCalls:
-      m_Calls: []
-  testText: {fileID: 0}
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: Venti.Theme.HeadingFont, Assembly-CSharp
+        m_MethodName: OnUpdate
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &8462378064982782055
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,8 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
 using SimpleJSON;
-using static UnityEditor.Progress;
-using System;
 
 namespace Venti.Experience
 {

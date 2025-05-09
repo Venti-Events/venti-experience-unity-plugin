@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using SimpleJSON;
-using static PlasticGui.PlasticTableColumn;
 
 namespace Venti.Theme
 {

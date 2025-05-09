@@ -4,7 +4,6 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
-using static Venti.Theme.Theme;
 
 namespace Venti.Theme
 {
@@ -31,7 +30,7 @@ namespace Venti.Theme
 
             if (string.IsNullOrEmpty(jsonStr))
             {
-                Debug.LogError("JSON string for loading theme is null or empty");
+                Debug.LogError("Local cached theme file not found");
                 return false;
             }
 

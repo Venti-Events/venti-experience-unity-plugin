@@ -2,7 +2,6 @@ using SimpleJSON;
 using System;
 using UnityEngine;
 using UnityEngine.Events;
-using static Venti.Experience.BooleanField;
 
 namespace Venti.Experience
 {
