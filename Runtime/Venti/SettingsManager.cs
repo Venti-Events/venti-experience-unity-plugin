@@ -4,6 +4,8 @@ using UnityEngine.Networking;
 using SimpleJSON;
 using UnityEngine.SceneManagement;
 using PimDeWitte.UnityMainThreadDispatcher;
+using Venti.Theme;
+using Venti.Experience;
 
 namespace Venti
 {
@@ -11,8 +13,8 @@ namespace Venti
     [RequireComponent(typeof(UnityMainThreadDispatcher))]
     public class SettingsManager : Singleton<SettingsManager>
     {
-        public Experience.ExperienceManager experienceManager;
-        public Theme.ThemeManager themeManager;
+        // public Experience.ExperienceManager experienceManager;
+        // public Theme.ThemeManager themeManager;
 
         private SocketConnector socket;
 
@@ -27,16 +29,16 @@ namespace Venti
 
         void Start()
         {
-            //if (PlayerPrefs.HasKey("appKey"))
-            //{
-            //    appKey = PlayerPrefs.GetString("appKey");
-            //    Debug.Log($"Loaded saved appKey: {appKey}");
-            //}
-            //else
-            //{
-            //    SceneManager.LoadScene("QRScanScene");
-            //    Debug.LogError("PlayerPrefs doesn't have appKey saved");
-            //}
+            // if (PlayerPrefs.HasKey("appKey"))
+            // {
+            //     appKey = PlayerPrefs.GetString("appKey");
+            //     Debug.Log($"Loaded saved appKey: {appKey}");
+            // }
+            // else
+            // {
+            //     SceneManager.LoadScene("QRScanScene");
+            //     Debug.LogError("PlayerPrefs doesn't have appKey saved");
+            // }
 
             appHash = PlayerPrefs.GetString("appHash", "");
             themeHash = PlayerPrefs.GetString("themeHash", "");
@@ -160,7 +162,7 @@ namespace Venti
                     string jsonResponse = www.downloadHandler.text;
                     Debug.Log("Fetched app json: " + jsonResponse);
 
-                    bool success = experienceManager.LoadFromWebJson(jsonResponse);
+                    bool success = ExperienceManager.Instance.LoadFromWebJson(jsonResponse);
                     if (success)
                     {
                         appHash = hash;
@@ -189,8 +191,7 @@ namespace Venti
                 {
                     // Parse the response and update the theme manager
                     string jsonResponse = www.downloadHandler.text;
-                    Debug.Log("Fetched theme json: " + jsonResponse);
-                    bool success = themeManager.LoadFromWebJson(jsonResponse);
+                    bool success = ThemeManager.Instance.LoadFromWebJson(jsonResponse);
                     if (success)
                     {
                         themeHash = hash;

@@ -3,10 +3,11 @@ using UnityEngine;
 using UnityEngine.Events;
 using SimpleJSON;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Venti.Experience
 {
-    public class ExperienceManager : MonoBehaviour
+    public class ExperienceManager : Singleton<ExperienceManager>
     {
         #region JSON_Items
         [field: SerializeField] public Metadata metaData { get; private set; }
@@ -15,15 +16,19 @@ namespace Venti.Experience
 
         #region Booleans
         [Tooltip("Enabling this will include inactive GameObjects in search")]
-        [SerializeField] private bool searchForInactive = false; // Enabling this will include inactive GameObjects in search
+        [SerializeField] private bool searchForInactive = false;
         #endregion
 
         public UnityEvent onMetadataUpdate;
+        public UnityEvent onFieldsUpdate;
 
         // JSON File Path
-        public const string appFolderName = "app";
-        //private const string schemaFileName = "ExperienceSchema";
+        public const string appFolderName = "cache";
         private const string configFileName = "app-config";
+
+        private List<string> pendingAssetLoadPaths = new List<string>();
+
+        // TODO: queuedJson with pendingAssetLoadPaths
 
         private void Start()
         {
@@ -93,6 +98,8 @@ namespace Venti.Experience
 
         public bool LoadFromWebJson(string jsonStr)
         {
+            Debug.Log("Experience JSON: " + jsonStr);
+
             JSONObject json = JSON.Parse(jsonStr).AsObject;
             if (json == null)
             {
@@ -112,6 +119,8 @@ namespace Venti.Experience
 
                 if (json == null)
                     throw new Exception("JSON for loading experience is null");
+
+                pendingAssetLoadPaths.Clear();
 
                 // TODO: Check whether versions match
 
@@ -153,6 +162,9 @@ namespace Venti.Experience
                 if (saveJson)
                     FileHandler.WriteString(json.ToString(), configFileName + ".json", appFolderName);
 
+                if (pendingAssetLoadPaths.Count == 0)
+                    onFieldsUpdate?.Invoke();
+
                 return success;
             }
             catch (Exception e)
@@ -160,6 +172,24 @@ namespace Venti.Experience
                 Debug.LogError("Unable to parse experience setting JSON: " + e.Message);
                 return false;
             }
+        }
+
+        public void OnFieldLoadStart(string fieldId)
+        {
+            pendingAssetLoadPaths.Add(fieldId);
+        }
+
+        public void OnFieldLoadEnd(string fieldId)
+        {
+            bool removed = pendingAssetLoadPaths.Remove(fieldId);
+            if (!removed)
+            {
+                Debug.LogError($"Asset path {fieldId} not found in pending field load paths for experienceManager");
+                return;
+            }
+
+            if (pendingAssetLoadPaths.Count <= 0)
+                onFieldsUpdate?.Invoke();
         }
     }
 }

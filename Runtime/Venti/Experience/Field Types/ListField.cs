@@ -1,5 +1,6 @@
 using SimpleJSON;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -21,6 +22,8 @@ namespace Venti.Experience
         [field: Header("Events")]
         [field: SerializeField] public UnityEvent<ListRowField[]> onChange { get; private set; }   // send value
         [field: SerializeField] public UnityEvent<string, ListRowField[]> onChangeWithId { get; private set; } // send id and value
+
+        private List<string> pendingLoadRowIds = new List<string>();
 
         public ListField()
         {
@@ -113,7 +116,8 @@ namespace Venti.Experience
             if (json["value"] == null)
             {
                 value = new ListRowField[0];
-                Debug.LogError("value is null in JSON for " + id);
+                Debug.LogError("List value is null in JSON for " + id);
+                return false;
             }
 
             if (header.value == null || header.value.Length == 0)
@@ -135,9 +139,13 @@ namespace Venti.Experience
                     Destroy(child.gameObject);
             }
 
+            // Clear pending row ids
+            pendingLoadRowIds.Clear();
+            // Inform parent that async value load has started
+            base.OnAsyncValueLoadStart(id);
+
             // Create new rows from JSON
             JSONArray rowsJson = json["value"].AsArray;
-
             // Empty existing value array
             value = new ListRowField[rowsJson.Count];
 
@@ -154,15 +162,48 @@ namespace Venti.Experience
                 rowField.id = rowJson["id"];
                 rowField.GenerateGameobjectName();
                 rowField.GenerateFields(header.value);
+                rowField.SetAsyncLoadEvents(OnRowLoadStart, OnRowLoadEnd);
                 rowField.SetFromJson(rowJson);
 
                 value[i] = rowField;
             }
 
-            onChange.Invoke(value);
-            onChangeWithId.Invoke(id, value);
+            // There were no async values to load
+            if (pendingLoadRowIds.Count == 0)
+            {
+                onChange?.Invoke(value);
+                onChangeWithId?.Invoke(id, value);
+
+                // Inform parent that all async value have been loaded
+                base.OnAsyncValueLoadEnd(id);
+            }
 
             return true;
+        }
+
+        private void OnRowLoadStart(string rowId)
+        {
+            if (!pendingLoadRowIds.Contains(rowId))
+                pendingLoadRowIds.Add(rowId);
+        }
+
+        private void OnRowLoadEnd(string rowId)
+        {
+            bool removed = pendingLoadRowIds.Remove(rowId);
+            if (!removed)
+            {
+                Debug.LogError($"Row id {rowId} not found in pending row load paths for listField {id}");
+                return;
+            }
+
+            if (pendingLoadRowIds.Count == 0)
+            {
+                onChange?.Invoke(value);
+                onChangeWithId?.Invoke(id, value);
+
+                // Inform parent that all async value have been loaded
+                base.OnAsyncValueLoadEnd(id);
+            }
         }
     }
 }

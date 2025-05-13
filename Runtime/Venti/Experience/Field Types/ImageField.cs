@@ -35,22 +35,27 @@ namespace Venti.Experience
             if (!base.SetFromJson(json))
                 return false;
 
-            string newValue;
+            // string newValue;
             if (json["value"] == null)
             {
-                newValue = @default;
+                valueRaw = @default;
                 Debug.LogWarning("value is null in JSON for " + id);
             }
             else
-                newValue = json["value"].Value;
+                valueRaw = json["value"].Value;
 
-            CacheManager.Instance.GetImage(valueRaw, newValue, ExperienceManager.appFolderName, (texture) =>
+            base.OnAsyncValueLoadStart(id);
+            CacheManager.Instance.GetAsset(valueRaw, CachedAssetType.Image, (texture) =>
             {
-                valueRaw = newValue;
-                value = texture;
+                if (texture != null)
+                {
+                    value = texture as Texture2D;
 
-                onChange.Invoke(value);
-                onChangeWithId.Invoke(id, value);
+                    onChange?.Invoke(value);
+                    onChangeWithId?.Invoke(id, value);
+                }
+
+                base.OnAsyncValueLoadEnd(id);
             });
 
             return true;

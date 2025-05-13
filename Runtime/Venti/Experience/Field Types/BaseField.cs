@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using SimpleJSON;
+using UnityEngine.Events;
 
 namespace Venti.Experience
 {
@@ -15,6 +16,8 @@ namespace Venti.Experience
         [SerializeField][ReadOnly] protected string hash;
 
         [field: NonSerialized] public virtual FieldType? type { get; protected set; } = null;
+        private Action<string> valueLoadStartEvent;
+        private Action<string> valueLoadEndEvent;
 
         public void GenerateGameobjectName()
         {
@@ -23,7 +26,7 @@ namespace Venti.Experience
 
         public virtual void FetchChildFields(bool searchForInactive = false)
         {
-            // No implementation for base fields
+            // Tasks to do when parent tries to fetch child fields
             GenerateGameobjectName();
         }
 
@@ -61,6 +64,22 @@ namespace Venti.Experience
 
             hash = json["hash"];
             return true;
+        }
+
+        public void SetAsyncLoadEvents(Action<string> onValueLoadStart, Action<string> onValueLoadEnd)
+        {
+            valueLoadStartEvent = onValueLoadStart;
+            valueLoadEndEvent = onValueLoadEnd;
+        }
+
+        protected void OnAsyncValueLoadStart(string value)
+        {
+            valueLoadStartEvent?.Invoke(value);
+        }
+
+        protected void OnAsyncValueLoadEnd(string value)
+        {
+            valueLoadEndEvent?.Invoke(value);
         }
     }
 }

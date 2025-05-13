@@ -84,16 +84,16 @@ namespace Venti.Theme
                 //size = (Size)Enum.Parse(typeof(Size), json["size"].Value);
                 Enum.TryParse<Size>(json["size"].Value, true, out size);
                 Enum.TryParse<Alignment>(json["alignment"].Value, true, out alignment);
+                imageUrl = json["imageUrl"];
 
-                string newImageUrl = json["imageUrl"];
-                CacheManager.Instance.GetImage(imageUrl, newImageUrl, ThemeManager.themeFolderName, (texture) =>
+                ThemeManager.Instance.OnAssetLoadStart(imageUrl);
+                CacheManager.Instance.GetAsset(imageUrl, CachedAssetType.Image, (texture) =>
                 {
-                    if (texture != null)
-                    {
-                        imageUrl = newImageUrl;
-                        image = texture;
-                    }
-                }, true);
+                    if (texture == null)
+                        return;
+                    image = texture as Texture2D;
+                    ThemeManager.Instance.OnAssetLoadEnd(imageUrl);
+                });
 
                 return true;
             }
@@ -205,76 +205,104 @@ namespace Venti.Theme
                     Enum.TryParse<FontType>(json["type"].Value, true, out type);
                     family = json["family"];
                     sizeAdjustment = json["sizeAdjustment"].AsFloat;
-
-                    string oldFontUrl = variants.regular;
-                    if (variantPreference == "regular")
-                        oldFontUrl = variants.regular;
-                    else if (variantPreference == "bold")
-                        oldFontUrl = variants.bold;
-                    else if (variantPreference == "semiBold")
-                        oldFontUrl = variants.semiBold;
-                    else if (variantPreference == "light")
-                        oldFontUrl = variants.light;
-                    else if (variantPreference == "italic")
-                        oldFontUrl = variants.italic;
-                    else if (variantPreference == "boldItalic")
-                        oldFontUrl = variants.boldItalic;
-
-                    string newFontUrl = json["variants"][variantPreference];
-                    Debug.Log("New font URL: " + newFontUrl);
-                    if (newFontUrl != null)
-                    {
-                        CacheManager.Instance.GetFont(oldFontUrl, newFontUrl, ThemeManager.themeFolderName, (font) =>
-                        {
-                            if (font != null)
-                            {
-                                fontAsset = font;
-                            }
-                        }, true);
-                    }
-                                
                     variants.SetFromJson(json["variants"].AsObject);
 
-                    return true;
-                }
-
-                [Serializable]
-                public class FontVariant
-                {
-                    public string bold;
-                    public string semiBold;
-                    public string regular;
-                    public string light;
-                    public string italic;
-                    public string boldItalic;
-
-                    public bool SetFromJson(JSONObject json)
+                    string newFontUrl = json["variants"][variantPreference];
+                    if (newFontUrl == null)
                     {
-                        if (json == null)
+                        if (variants.regular != null)
+                            newFontUrl = variants.regular;
+                        else if (variants.bold != null)
+                            newFontUrl = variants.bold;
+                        else if (variants.semiBold != null)
+                            newFontUrl = variants.semiBold;
+                        else if (variants.light != null)
+                            newFontUrl = variants.light;
+                        else if (variants.italic != null)
+                            newFontUrl = variants.italic;
+                        else if (variants.boldItalic != null)
+                            newFontUrl = variants.boldItalic;
+                    }
+
+                    if (newFontUrl == null)
                         {
-                            Debug.LogError("JSON is null for theme font variant");
+                            Debug.LogError("No variant found for font");
                             return false;
                         }
 
-                        bold = json["bold"];
-                        semiBold = json["semiBold"];
-                        regular = json["regular"];
-                        light = json["light"];
-                        italic = json["italic"];
-                        boldItalic = json["boldItalic"];
+                    ThemeManager.Instance.OnAssetLoadStart(newFontUrl);
+                    CacheManager.Instance.GetAsset(newFontUrl, CachedAssetType.Font, (font) =>
+                    {
+                        if (font == null)
+                            return;
+                        fontAsset = font as TMPro.TMP_FontAsset;
+                        ThemeManager.Instance.OnAssetLoadEnd(newFontUrl);
+                    });
 
-                        return true;
-                    }
+                    return true;
                 }
             }
 
             [Serializable]
-            public class TypeScale
+            public class FontVariant
             {
-                public TypeScaleStruct heading;
-                public TypeScaleStruct subHeading;
-                public TypeScaleStruct body;
-                public TypeScaleStruct caption;
+                public string bold;
+                public string semiBold;
+                public string regular;
+                public string light;
+                public string italic;
+                public string boldItalic;
+
+                public bool SetFromJson(JSONObject json)
+                {
+                    if (json == null)
+                    {
+                        Debug.LogError("JSON is null for theme font variant");
+                        return false;
+                    }
+
+                    bold = json["bold"];
+                    semiBold = json["semiBold"];
+                    regular = json["regular"];
+                    light = json["light"];
+                    italic = json["italic"];
+                    boldItalic = json["boldItalic"];
+
+                    return true;
+                }
+            }
+        }
+
+        [Serializable]
+        public class TypeScale
+        {
+            public TypeScaleStruct heading;
+            public TypeScaleStruct subHeading;
+            public TypeScaleStruct body;
+            public TypeScaleStruct caption;
+
+            public bool SetFromJson(JSONObject json)
+            {
+                if (json == null)
+                {
+                    Debug.LogError("JSON is null for theme type scale");
+                    return false;
+                }
+
+                heading.SetFromJson(json["heading"].AsObject);
+                subHeading.SetFromJson(json["subHeading"].AsObject);
+                body.SetFromJson(json["body"].AsObject);
+                caption.SetFromJson(json["caption"].AsObject);
+
+                return true;
+            }
+
+            [Serializable]
+            public class TypeScaleStruct
+            {
+                public TypographyType font = TypographyType.body;
+                public string color;
+                public Color colorValue;
 
                 public bool SetFromJson(JSONObject json)
                 {
@@ -284,297 +312,152 @@ namespace Venti.Theme
                         return false;
                     }
 
-                    heading.SetFromJson(json["heading"].AsObject);
-                    subHeading.SetFromJson(json["subHeading"].AsObject);
-                    body.SetFromJson(json["body"].AsObject);
-                    caption.SetFromJson(json["caption"].AsObject);
+                    Enum.TryParse<TypographyType>(json["font"].Value, true, out font);
+                    color = json["color"];
+                    ColorUtility.TryParseHtmlString(color, out colorValue);
 
                     return true;
                 }
-
-                [Serializable]
-                public class TypeScaleStruct
-                {
-                    public TypographyType font = TypographyType.body;
-                    public string color;
-                    public Color colorValue;
-
-                    public bool SetFromJson(JSONObject json)
-                    {
-                        if (json == null)
-                        {
-                            Debug.LogError("JSON is null for theme type scale");
-                            return false;
-                        }
-
-                        Enum.TryParse<TypographyType>(json["font"].Value, true, out font);
-                        color = json["color"];
-                        ColorUtility.TryParseHtmlString(color, out colorValue);
-
-                        return true;
-                    }
-                }
-            }
-
-        }
-
-        [Serializable]
-        public class ThemeButton
-        {
-            public ButtonStruct primary;
-            public ButtonStruct secondary;
-            [SerializeField][ReadOnly] private string hash;
-
-            public bool SetFromJson(JSONObject json)
-            {
-                if (json == null)
-                    throw new Exception("JSON is null for header");
-
-                if (json["hash"] == null)
-                    throw new Exception("No hash for header");
-
-                if (json["hash"] == hash)
-                    return false;
-
-                primary.SetFromJson(json["primary"].AsObject);
-                secondary.SetFromJson(json["secondary"].AsObject);
-                hash = json["hash"];
-
-                return true;
             }
         }
 
-        [Serializable]
-        public class ButtonStruct
+    }
+
+    [Serializable]
+    public class ThemeButton
+    {
+        public ButtonStruct primary;
+        public ButtonStruct secondary;
+        [SerializeField][ReadOnly] private string hash;
+
+        public bool SetFromJson(JSONObject json)
         {
-            public string textColor;
-            public Color textColorValue;
-            public RoundingFull rounded;
-            public BorderThickness borderThickness;
+            if (json == null)
+                throw new Exception("JSON is null for header");
 
-            public bool SetFromJson(JSONObject json)
-            {
-                if (json == null)
-                {
-                    Debug.LogError("JSON is null for theme button");
-                    return false;
-                }
+            if (json["hash"] == null)
+                throw new Exception("No hash for header");
 
-                textColor = json["textColor"];
-                ColorUtility.TryParseHtmlString(textColor, out textColorValue);
-                Enum.TryParse<RoundingFull>(json["rounded"].Value, true, out rounded);
-                Enum.TryParse<BorderThickness>(json["borderThickness"].Value, true, out borderThickness);
+            if (json["hash"] == hash)
+                return false;
 
-                return true;
-            }
-        }
+            primary.SetFromJson(json["primary"].AsObject);
+            secondary.SetFromJson(json["secondary"].AsObject);
+            hash = json["hash"];
 
-        [Serializable]
-        public class Surface
-        {
-            public string color;
-            public Color colorValue;
-            public Rounding rounded;
-            public BorderThickness borderThickness;
-            public string borderColor;
-            public Color borderColorValue;
-            [SerializeField][ReadOnly] private string hash;
-
-            public bool SetFromJson(JSONObject json)
-            {
-                if (json == null)
-                    throw new Exception("JSON is null for header");
-
-                if (json["hash"] == null)
-                    throw new Exception("No hash for header");
-
-                if (json["hash"] == hash)
-                    return false;
-
-                //primary.SetFromJson(json["primary"].AsObject);
-                //secondary.SetFromJson(json["secondary"].AsObject);
-                color = json["color"];
-                ColorUtility.TryParseHtmlString(color, out colorValue);
-                Enum.TryParse<Rounding>(json["rounded"].Value, true, out rounded);
-                Enum.TryParse<BorderThickness>(json["borderThickness"].Value, true, out borderThickness);
-                borderColor = json["borderColor"];
-                ColorUtility.TryParseHtmlString(borderColor, out borderColorValue);
-                hash = json["hash"];
-
-                return true;
-            }
-        }
-
-        [Serializable]
-        public class Background
-        {
-            public string color;
-            public Color colorValue;
-            public string portraitImageUrl;
-            public Texture2D portraitImage;
-            public string landscapeImageUrl;
-            public Texture2D landscapeImage;
-            [SerializeField][ReadOnly] private string hash;
-
-            public bool SetFromJson(JSONObject json)
-            {
-                if (json == null)
-                    throw new Exception("JSON is null for header");
-
-                if (json["hash"] == null)
-                    throw new Exception("No hash for header");
-
-                if (json["hash"] == hash)
-                    return false;
-
-                color = json["color"];
-                ColorUtility.TryParseHtmlString(color, out colorValue);
-                
-                string oldPortraitImageUrl = portraitImageUrl;
-                string oldLandscapeImageUrl = landscapeImageUrl;
-                string newPortraitImageUrl = json["portraitImageUrl"];
-                string newLandscapeImageUrl = json["landscapeImageUrl"];
-                CacheManager.Instance.GetImage(oldPortraitImageUrl, newPortraitImageUrl, ThemeManager.themeFolderName, (texture) =>
-                {
-                    if (texture != null)
-                    {
-                        portraitImageUrl = newPortraitImageUrl;
-                        portraitImage = texture;
-                    }
-                }, true);
-                CacheManager.Instance.GetImage(oldLandscapeImageUrl, newLandscapeImageUrl, ThemeManager.themeFolderName, (texture) =>
-                {
-                    if (texture != null)
-                    {
-                        landscapeImageUrl = newLandscapeImageUrl;
-                        landscapeImage = texture;
-                    }
-                }, true);
-                hash = json["hash"];
-
-                return true;
-            }
+            return true;
         }
     }
 
-    //[Serializable]
-    //public class Theme
-    //{
-    //    public ThemeImage companyLogo;
-    //    public ThemeImage eventLogo;
-    //    public Footer footer;
-    //    public ThemeColor themeColors;
-    //    public Typography typography;
-    //    public ThemeButton buttons;
-    //    public Surface surfaces;
-    //    public Background background;
+    [Serializable]
+    public class ButtonStruct
+    {
+        public string textColor;
+        public Color textColorValue;
+        public RoundingFull rounded;
+        public BorderThickness borderThickness;
 
-    //    [Serializable]
-    //    public class ThemeImage
-    //    {
-    //        public string imageUrl;
-    //        public Size size;
-    //        public Alignment alignment;
-    //    }
+        public bool SetFromJson(JSONObject json)
+        {
+            if (json == null)
+            {
+                Debug.LogError("JSON is null for theme button");
+                return false;
+            }
 
-    //    [Serializable]
-    //    public class Footer
-    //    {
-    //        public FooterText text;
-    //        public ThemeImage image;
+            textColor = json["textColor"];
+            ColorUtility.TryParseHtmlString(textColor, out textColorValue);
+            Enum.TryParse<RoundingFull>(json["rounded"].Value, true, out rounded);
+            Enum.TryParse<BorderThickness>(json["borderThickness"].Value, true, out borderThickness);
 
-    //        [Serializable]
-    //        public class FooterText
-    //        {
-    //            public string text;
-    //            public Alignment alignment;
-    //        }
-    //    }
+            return true;
+        }
+    }
 
-    //    [Serializable]
-    //    public class ThemeColor
-    //    {
-    //        public Color primary;
-    //        public Color secondary;
-    //    }
+    [Serializable]
+    public class Surface
+    {
+        public string color;
+        public Color colorValue;
+        public Rounding rounded;
+        public BorderThickness borderThickness;
+        public string borderColor;
+        public Color borderColorValue;
+        [SerializeField][ReadOnly] private string hash;
 
-    //    [Serializable]
-    //    public class Typography
-    //    {
-    //        public ThemeFont headingFont;
-    //        public ThemeFont bodyFont;
-    //        public TypeScale typeScales;
+        public bool SetFromJson(JSONObject json)
+        {
+            if (json == null)
+                throw new Exception("JSON is null for header");
 
-    //        [Serializable]
-    //        public class ThemeFont
-    //        {
-    //            public FontType type;
-    //            public FontVariant variants;
-    //            //public float sizeAdjustment;
+            if (json["hash"] == null)
+                throw new Exception("No hash for header");
 
-    //            [Serializable]
-    //            public class FontVariant
-    //            {
-    //                public string bold;
-    //                public string semiBold;
-    //                public string regular;
-    //                public string light;
-    //                public string italic;
-    //                public string boldItalic;
-    //            }
-    //        }
+            if (json["hash"] == hash)
+                return false;
 
-    //        [Serializable]
-    //        public class TypeScale
-    //        {
-    //            public TypeScaleStruct heading;
-    //            public TypeScaleStruct subHeading;
-    //            public TypeScaleStruct body;
-    //            public TypeScaleStruct caption;
-    //            //public TypeScaleStruct primaryButton;
-    //            //public TypeScaleStruct secondaryButton;
+            //primary.SetFromJson(json["primary"].AsObject);
+            //secondary.SetFromJson(json["secondary"].AsObject);
+            color = json["color"];
+            ColorUtility.TryParseHtmlString(color, out colorValue);
+            Enum.TryParse<Rounding>(json["rounded"].Value, true, out rounded);
+            Enum.TryParse<BorderThickness>(json["borderThickness"].Value, true, out borderThickness);
+            borderColor = json["borderColor"];
+            ColorUtility.TryParseHtmlString(borderColor, out borderColorValue);
+            hash = json["hash"];
 
-    //            [Serializable]
-    //            public class TypeScaleStruct
-    //            {
-    //                //public TypographyType font;
-    //                public Color color;
-    //            }
-    //        }
+            return true;
+        }
+    }
 
-    //    }
+    [Serializable]
+    public class Background
+    {
+        public string color;
+        public Color colorValue;
+        public string portraitImageUrl;
+        public Texture2D portraitImage;
+        public string landscapeImageUrl;
+        public Texture2D landscapeImage;
+        [SerializeField][ReadOnly] private string hash;
 
-    //    [Serializable]
-    //    public class ThemeButton
-    //    {
-    //        public ButtonStruct primary;
-    //        public ButtonStruct secondary;
-    //    }
+        public bool SetFromJson(JSONObject json)
+        {
+            if (json == null)
+                throw new Exception("JSON is null for header");
 
-    //    [Serializable]
-    //    public class ButtonStruct
-    //    {
-    //        public Color textColor;
-    //        public RoundingFull rounded;
-    //        public BorderThickness borderThickness;
-    //        public Color borderColor;
-    //    }
+            if (json["hash"] == null)
+                throw new Exception("No hash for header");
 
-    //    [Serializable]
-    //    public class Surface
-    //    {
-    //        public Color color;
-    //        public Rounding rounded;
-    //        public BorderThickness borderThickness;
-    //        public Color borderColor;
-    //    }
+            if (json["hash"] == hash)
+                return false;
 
-    //    [Serializable]
-    //    public class Background
-    //    {
-    //        public Color color;
-    //        public string portraitImageUrl;
-    //        public string landscapeImageUrl;
-    //    }
-    //}
+            color = json["color"];
+            portraitImageUrl = json["portraitImageUrl"].Value;
+            landscapeImageUrl = json["landscapeImageUrl"].Value;
+            hash = json["hash"];
+
+            ColorUtility.TryParseHtmlString(color, out colorValue);
+
+            ThemeManager.Instance.OnAssetLoadStart(portraitImageUrl);
+            CacheManager.Instance.GetAsset(portraitImageUrl, CachedAssetType.Image, (texture) =>
+            {
+                if (texture == null)
+                    return;
+                portraitImage = texture as Texture2D;
+                ThemeManager.Instance.OnAssetLoadEnd(portraitImageUrl);
+            });
+
+            ThemeManager.Instance.OnAssetLoadStart(landscapeImageUrl);
+            CacheManager.Instance.GetAsset(landscapeImageUrl, CachedAssetType.Image, (texture) =>
+            {
+                if (texture == null)
+                    return;
+                landscapeImage = texture as Texture2D;
+                ThemeManager.Instance.OnAssetLoadEnd(landscapeImageUrl);
+            });
+
+            return true;
+        }
+    }
 }

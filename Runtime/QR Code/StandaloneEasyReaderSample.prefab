@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6262748702821843388}
-  - component: {fileID: 5591306468763270027}
+  - component: {fileID: 3206118188515106195}
   m_Layer: 0
   m_Name: StandaloneEasyReaderSample
   m_TagString: Untagged
@@ -32,7 +32,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5591306468763270027
+--- !u!114 &3206118188515106195
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -41,9 +41,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 394525330945181261}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4fb787cbe747e7a47bd62b4fca389c83, type: 3}
+  m_Script: {fileID: 11500000, guid: 4159e3ad8a26bce4d9c49b3568a9c0c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   lastResult: 
-  logAvailableWebcams: 1
+  logAvailableWebcams: 0
   selectedWebcamIndex: 0
+  inputPanel: {fileID: 0}
+  codeInputField: {fileID: 0}
+  submitButton: {fileID: 0}
+  webcamRawImage: {fileID: 0}
+  webcamRenderTexture: {fileID: 0}
