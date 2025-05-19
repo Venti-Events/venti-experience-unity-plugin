@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using Venti;
 using PimDeWitte.UnityMainThreadDispatcher;
+using Venti.Experience;
+using Venti.Theme;
+using Venti.Session;
 
 public class SocketConnector: IDisposable
 {
@@ -59,6 +62,14 @@ public class SocketConnector: IDisposable
             UnityMainThreadDispatcher.Instance().Enqueue(FetchThemeConfig(hash));
         });
 
+        client.On("sessionStart", response =>
+        {
+            string sessionId = response.GetValue<string>();
+            Debug.Log("Session started: " + sessionId);
+
+            UnityMainThreadDispatcher.Instance().Enqueue(FetchSession(sessionId));
+        });
+
         client.OnConnected += (sender, e) =>
         {
             Debug.Log("Connected to server!");
@@ -79,19 +90,25 @@ public class SocketConnector: IDisposable
 
     IEnumerator ParseHashesJson(string jsonResponse)
     {
-        SettingsManager.Instance.ParseHashesJson(jsonResponse);
+        VentiManager.Instance?.ParseHashesJson(jsonResponse);
         yield return null;
     }
 
     IEnumerator FetchAppConfig(string hash)
     {
-        SettingsManager.Instance.FetchAppConfig(hash);
+        ExperienceManager.Instance?.FetchAppConfig(hash);
         yield return null;
     }
 
     IEnumerator FetchThemeConfig(string hash)
     {
-        SettingsManager.Instance.FetchThemeConfig(hash);
+        ThemeManager.Instance?.FetchThemeConfig(hash);
+        yield return null;
+    }
+
+    IEnumerator FetchSession(string sessionId)
+    {
+        SessionManager.Instance?.FetchSession(sessionId);
         yield return null;
     }
 

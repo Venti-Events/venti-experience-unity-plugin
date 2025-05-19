@@ -4,6 +4,8 @@ using UnityEngine.Events;
 using SimpleJSON;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using UnityEngine.Networking;
+using System.Collections;
 
 namespace Venti.Experience
 {
@@ -19,24 +21,48 @@ namespace Venti.Experience
         [SerializeField] private bool searchForInactive = false;
         #endregion
 
+        #region Events
         public UnityEvent onMetadataUpdate;
         public UnityEvent onFieldsUpdate;
+        #endregion
 
-        // JSON File Path
-        public const string appFolderName = "cache";
+        #region Path_Constants
+        // public const string appFolderName = "cache";
         private const string configFileName = "app-config";
+        public const string getAppConfigUrl = @"/api/v1/experience-app/get-experience-app-configuration";
+        #endregion
 
+        #region Private_Variables
+        private string appHash;
         private List<string> pendingAssetLoadPaths = new List<string>();
+        #endregion
 
         // TODO: queuedJson with pendingAssetLoadPaths
 
+        #region Unity_Methods
         private void Start()
         {
+            appHash = PlayerPrefs.GetString("appHash", "");
+
             //Debug.LogWarning("Booker-T");
             ClearFields();
             FetchChildFields();
 
             LoadFromLocalJson();
+        }
+        #endregion
+
+        #region Public_Methods
+        // Fetch app config
+        public void FetchAppConfig(string hash)
+        {
+            if (hash != appHash)
+            {
+                Debug.Log("App hashes mismatch. Re-fetch");
+                StartCoroutine(GetAppConfig(hash));
+            }
+            else
+                Debug.Log("App hash is the same, no need to fetch again.");
         }
 
         public void FetchChildFields()
@@ -73,7 +99,7 @@ namespace Venti.Experience
             return experienceJson;
         }
 
-        public void ExportJson()
+        public void SaveJson()
         {
             FetchChildFields();
 
@@ -82,10 +108,12 @@ namespace Venti.Experience
 
             FileHandler.WriteString(jsonStr, $"{metaData.experienceId}-schema-v{metaData.version.ToString()}.json", "Exports", true);
         }
+        #endregion
 
-        public bool LoadFromLocalJson()
+        #region Private_Methods
+        private bool LoadFromLocalJson()
         {
-            string jsonStr = FileHandler.ReadFile(configFileName + ".json", appFolderName);
+            string jsonStr = FileHandler.ReadFile(configFileName + ".json", CacheManager.cacheFolderName);
 
             if (jsonStr != null)
             {
@@ -96,7 +124,7 @@ namespace Venti.Experience
             return false;
         }
 
-        public bool LoadFromWebJson(string jsonStr)
+        private bool LoadFromWebJson(string jsonStr)
         {
             Debug.Log("Experience JSON: " + jsonStr);
 
@@ -111,7 +139,39 @@ namespace Venti.Experience
             return LoadJson(configJson, true);
         }
 
-        bool LoadJson(JSONObject json, bool saveJson = true)
+        private IEnumerator GetAppConfig(string hash)
+        {
+            Debug.Log("GetAppConfig");
+            string url = VentiManager.serverUrl + getAppConfigUrl;
+            Debug.Log("Fetching app config from: " + url + " with hash: " + hash);
+
+            using (VentiApiRequest www = VentiApiRequest.Get(url))
+            {
+                yield return www.SendAuthenticatedApiRequest();
+
+                if (www.result != VentiApiRequest.Result.Success)
+                {
+                    Debug.LogError("Error fetching app config: " + www.error);
+                }
+                else
+                {
+                    // Parse the response and update the experience manager
+                    string jsonResponse = www.downloadHandler.text;
+                    Debug.Log("Fetched app json: " + jsonResponse);
+
+                    bool success = LoadFromWebJson(jsonResponse);
+                    if (success)
+                    {
+                        appHash = hash;
+
+                        PlayerPrefs.SetString("appHash", appHash);
+                        PlayerPrefs.Save();
+                    }
+                }
+            }
+        }
+
+        private bool LoadJson(JSONObject json, bool saveJson = true)
         {
             try
             {
@@ -160,7 +220,7 @@ namespace Venti.Experience
                 }
 
                 if (saveJson)
-                    FileHandler.WriteString(json.ToString(), configFileName + ".json", appFolderName);
+                    FileHandler.WriteString(json.ToString(), configFileName + ".json", CacheManager.cacheFolderName);
 
                 if (pendingAssetLoadPaths.Count == 0)
                     onFieldsUpdate?.Invoke();
@@ -173,18 +233,19 @@ namespace Venti.Experience
                 return false;
             }
         }
+        #endregion
 
         public void OnFieldLoadStart(string fieldId)
         {
-            pendingAssetLoadPaths.Add(fieldId);
+            pendingAssetLoadPaths.Add(appHash + "/" + fieldId);
         }
 
         public void OnFieldLoadEnd(string fieldId)
         {
-            bool removed = pendingAssetLoadPaths.Remove(fieldId);
+            bool removed = pendingAssetLoadPaths.Remove(appHash + "/" + fieldId);
             if (!removed)
             {
-                Debug.LogError($"Asset path {fieldId} not found in pending field load paths for experienceManager");
+                Debug.LogError($"Asset path {appHash}/{fieldId} not found in pending field load paths for experienceManager");
                 return;
             }
 

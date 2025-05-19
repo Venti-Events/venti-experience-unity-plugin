@@ -19,7 +19,7 @@ namespace Venti.Experience
         private Action<string> valueLoadStartEvent;
         private Action<string> valueLoadEndEvent;
 
-        public void GenerateGameobjectName()
+        public void GenerateGameObjectName()
         {
             name = $"{id} ({type})";
         }
@@ -27,7 +27,7 @@ namespace Venti.Experience
         public virtual void FetchChildFields(bool searchForInactive = false)
         {
             // Tasks to do when parent tries to fetch child fields
-            GenerateGameobjectName();
+            GenerateGameObjectName();
         }
 
         public virtual void ClearFields()

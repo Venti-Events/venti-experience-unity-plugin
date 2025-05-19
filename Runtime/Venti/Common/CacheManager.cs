@@ -6,6 +6,7 @@ using UnityEngine.Networking;
 using TMPro;
 using System.Web;
 using UnityEditor.VersionControl;
+using System.IO;
 //using Codice.Utils;
 
 namespace Venti
@@ -15,7 +16,8 @@ namespace Venti
         private Dictionary<string, CachedAsset> cache = new Dictionary<string, CachedAsset>();
         private Dictionary<string, List<Action<UnityEngine.Object>>> pendingRequests = new Dictionary<string, List<Action<UnityEngine.Object>>>();
 
-        public const string cacheFolderName = "Cache/Assets";
+        public const string cacheFolderName = "cache";
+        public const string assetFolderName = "assets";
 
         // public bool GetImage(string oldUrl, string newUrl, string folderName, Action<Texture2D> callback, bool forceUpdate = false)
         // {
@@ -158,18 +160,20 @@ namespace Venti
                 // First request, create entry in pendingRequests
                 pendingRequests.Add(decodedUrl, new List<Action<UnityEngine.Object>>() { callback });
 
+                string cachedAssetsFolderName = Path.Combine(cacheFolderName, assetFolderName);
+
                 FileDetails fileDetails = new FileDetails
                 {
                     fileName = fileName,
-                    folderName = cacheFolderName,
+                    folderName = cachedAssetsFolderName,
                     filePath = decodedUrl,
                     isCachePath = false
                 };
 
                 // If file exists in cache
-                if (!forceUpdate && FileHandler.FileExists(fileName, cacheFolderName))
+                if (!forceUpdate && FileHandler.FileExists(fileName, cachedAssetsFolderName))
                 {
-                    fileDetails.filePath = FileHandler.GetFilePath(fileName, cacheFolderName);
+                    fileDetails.filePath = FileHandler.GetFilePath(fileName, cachedAssetsFolderName);
                     fileDetails.isCachePath = true;
                 }
 

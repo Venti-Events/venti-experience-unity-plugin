@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Networking;
 
 namespace Venti.Theme
 {
@@ -15,23 +16,65 @@ namespace Venti.Theme
         public UnityEvent onThemeUpdate;
 
         // JSON File Path
-        public const string themeFolderName = "cache";
+        // public const string themeFolderName = "cache";
         private const string configFileName = "theme-config";
 
         // private int pendingAssetLoads = 0;
+        private string themeHash;
         private List<string> pendingAssetLoadPaths = new List<string>();
         // private string queuedJson = null;
 
-        // TODO: queuedJson with pendingAssetLoadPaths
-
         private void Start()
         {
+            themeHash = PlayerPrefs.GetString("themeHash", "");
+            
             LoadFromLocalJson();
         }
 
-        public bool LoadFromLocalJson()
+        // Fetch theme config
+        public void FetchThemeConfig(string hash)
         {
-            string jsonStr = FileHandler.ReadFile(configFileName + ".json", themeFolderName);
+            if (hash != themeHash)
+            {
+                Debug.Log("Theme hashes mismatch. Re-fetch");
+                Debug.Log("Old hash: " +  themeHash + "\n New hash: " + hash);
+                StartCoroutine(GetThemeConfig(hash));
+            }
+            else
+                Debug.Log("Theme hash is the same, no need to fetch again.");
+        }
+
+        private IEnumerator GetThemeConfig(string hash)
+        {
+            string url = VentiManager.serverUrl + getThemeUrl;
+
+            using (UnityWebRequest www = UnityWebRequest.Get(url))
+            {
+                www.SetRequestHeader("Authorization", "Bearer " + TokenManager.Instance.appKey);
+                yield return www.SendWebRequest();
+
+                if (www.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.LogError("Error fetching theme config: " + www.error);
+                }
+                else
+                {
+                    // Parse the response and update the theme manager
+                    string jsonResponse = www.downloadHandler.text;
+                    bool success = ThemeManager.Instance.LoadFromWebJson(jsonResponse);
+                    if (success)
+                    {
+                        themeHash = hash;
+                        //PlayerPrefs.SetString("themeHash", themeHash);
+                        //PlayerPrefs.Save();
+                    }
+                }
+            }
+        }
+
+        private bool LoadFromLocalJson()
+        {
+            string jsonStr = FileHandler.ReadFile(configFileName + ".json", CacheManager.cacheFolderName);
 
             if (string.IsNullOrEmpty(jsonStr))
             {
@@ -43,7 +86,7 @@ namespace Venti.Theme
             return LoadJson(json, false);
         }
 
-        public bool LoadFromWebJson(string jsonStr)
+        private bool LoadFromWebJson(string jsonStr)
         {
             //JSONObject json = JSON.Parse(jsonStr).AsObject;
             //if (json == null)
@@ -97,7 +140,7 @@ namespace Venti.Theme
                 if (SetFromJson(json))
                 {
                     if (saveJson)
-                        FileHandler.WriteString(json.ToString(), configFileName + ".json", themeFolderName);
+                        FileHandler.WriteString(json.ToString(), configFileName + ".json", CacheManager.cacheFolderName);
 
                     // If no assets need loading, invoke immediately
                     // if (pendingAssetLoads == 0)
