@@ -5,7 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Networking;
 
 namespace Venti.Theme
 {
@@ -16,145 +15,39 @@ namespace Venti.Theme
         public UnityEvent onThemeUpdate;
 
         // JSON File Path
-        // public const string themeFolderName = "cache";
         private const string configFileName = "theme-config";
+        private const string getThemeUrl = @"/project/get-project-theme-config";
 
-        // private int pendingAssetLoads = 0;
         private string themeHash;
         private List<string> pendingAssetLoadPaths = new List<string>();
         // private string queuedJson = null;
 
+        #region Unity_Methods
         private void Start()
         {
-            themeHash = PlayerPrefs.GetString("themeHash", "");
-            
             LoadFromLocalJson();
         }
+        #endregion Unity_Methods
 
+        #region Public_Methods
         // Fetch theme config
         public void FetchThemeConfig(string hash)
         {
             if (hash != themeHash)
             {
                 Debug.Log("Theme hashes mismatch. Re-fetch");
-                Debug.Log("Old hash: " +  themeHash + "\n New hash: " + hash);
-                StartCoroutine(GetThemeConfig(hash));
+                Debug.Log("Old hash: " + themeHash + "\n New hash: " + hash);
+                StartCoroutine(GetThemeConfig());
             }
             else
                 Debug.Log("Theme hash is the same, no need to fetch again.");
         }
 
-        private IEnumerator GetThemeConfig(string hash)
+        public bool SetFromJson(JSONObject json)
         {
-            string url = VentiManager.serverUrl + getThemeUrl;
-
-            using (UnityWebRequest www = UnityWebRequest.Get(url))
-            {
-                www.SetRequestHeader("Authorization", "Bearer " + TokenManager.Instance.appKey);
-                yield return www.SendWebRequest();
-
-                if (www.result != UnityWebRequest.Result.Success)
-                {
-                    Debug.LogError("Error fetching theme config: " + www.error);
-                }
-                else
-                {
-                    // Parse the response and update the theme manager
-                    string jsonResponse = www.downloadHandler.text;
-                    bool success = ThemeManager.Instance.LoadFromWebJson(jsonResponse);
-                    if (success)
-                    {
-                        themeHash = hash;
-                        //PlayerPrefs.SetString("themeHash", themeHash);
-                        //PlayerPrefs.Save();
-                    }
-                }
-            }
-        }
-
-        private bool LoadFromLocalJson()
-        {
-            string jsonStr = FileHandler.ReadFile(configFileName + ".json", CacheManager.cacheFolderName);
-
-            if (string.IsNullOrEmpty(jsonStr))
-            {
-                Debug.LogError("Local cached theme file not found");
-                return false;
-            }
-
-            JSONObject json = JSON.Parse(jsonStr).AsObject;
-            return LoadJson(json, false);
-        }
-
-        private bool LoadFromWebJson(string jsonStr)
-        {
-            //JSONObject json = JSON.Parse(jsonStr).AsObject;
-            //if (json == null)
-            //{
-            //    Debug.LogError("JSON for loading experience is null");
-            //    return false;
-            //}
-
-            //JSONObject configJson = json["data"]["theme"].AsObject;
-            //return LoadJson(configJson.ToString(), true);
-
-            if (string.IsNullOrEmpty(jsonStr))
-            {
-                Debug.LogError("JSON string for loading theme is null or empty");
-                return false;
-            }
-
-            JSONObject json = JSON.Parse(jsonStr).AsObject;
-            if (json == null)
-            {
-                Debug.LogError("JSON for loading experience is null");
-                return false;
-            }
-
-            // if (pendingAssetLoads > 0)
-            // {
-            //     queuedJson = jsonStr;
-            //     return true;
-            // }
-            // pendingAssetLoads = 0;
-            // queuedJson = null;
-
-            JSONObject configJson = json["data"]["theme"].AsObject;
-            return LoadJson(configJson, true);
-        }
-
-        bool LoadJson(JSONObject json, bool saveJson = true)
-        {
-            try
-            {
-                if (json == null)
-                    throw new Exception("JSON for loading experience is null");
-
-                // TODO: Check whether versions match
-
-                // Reset pending asset counter
-                // pendingAssetLoads = 0;
-                pendingAssetLoadPaths.Clear();
-
-                // Update all fields from json
-                if (SetFromJson(json))
-                {
-                    if (saveJson)
-                        FileHandler.WriteString(json.ToString(), configFileName + ".json", CacheManager.cacheFolderName);
-
-                    // If no assets need loading, invoke immediately
-                    // if (pendingAssetLoads == 0)
-                    if (pendingAssetLoadPaths.Count <= 0)
-                        onThemeUpdate?.Invoke();
-                }
-
-                return true;
-            }
-            catch (JsonException e)
-            {
-                Debug.LogError($"Failed to load theme JSON: {e.Message}");
-                return false;
-            }
+            // theme.SetAsyncLoadEvents(OnAssetLoadStart, OnAssetLoadEnd);
+            theme.SetFromJson(json);
+            return true;
         }
 
         public void OnAssetLoadStart(string assetPath)
@@ -185,11 +78,106 @@ namespace Venti.Theme
                 // }
             }
         }
+        #endregion Public_Methods
 
-        public bool SetFromJson(JSONObject json)
+        #region Private_Methods
+        private IEnumerator GetThemeConfig()
         {
-            theme.SetFromJson(json);
-            return true;
+            using (VentiApiRequest www = VentiApiRequest.Get(getThemeUrl))
+            {
+                yield return www.SendAuthenticatedApiRequest();
+
+                if (www.result != VentiApiRequest.Result.Success)
+                {
+                    Debug.LogError("Error fetching theme config: " + www.error);
+                }
+                else
+                {
+                    // Parse the response and update the theme manager
+                    string jsonResponse = www.downloadHandler.text;
+                    bool success = LoadFromWebJson(jsonResponse);
+                    // if (success)
+                    //     themeHash = hash;
+                }
+            }
         }
+
+        private bool LoadFromLocalJson()
+        {
+            string jsonStr = FileHandler.ReadFile(configFileName + ".json", CacheManager.cacheFolderName);
+
+            if (string.IsNullOrEmpty(jsonStr))
+            {
+                Debug.LogError("Local cached theme file not found");
+                return false;
+            }
+
+            JSONObject json = JSON.Parse(jsonStr).AsObject;
+            return LoadJson(json, false);
+        }
+
+        private bool LoadFromWebJson(string jsonStr)
+        {
+            if (string.IsNullOrEmpty(jsonStr))
+            {
+                Debug.LogError("JSON string for loading theme is null or empty");
+                return false;
+            }
+
+            JSONObject json = JSON.Parse(jsonStr).AsObject;
+            if (json == null)
+            {
+                Debug.LogError("JSON for loading experience is null");
+                return false;
+            }
+
+            // if (pendingAssetLoads > 0)
+            // {
+            //     queuedJson = jsonStr;
+            //     return true;
+            // }
+            // pendingAssetLoads = 0;
+            // queuedJson = null;
+
+            JSONObject configJson = json["data"]["theme"].AsObject;
+            return LoadJson(configJson, true);
+        }
+
+        private bool LoadJson(JSONObject json, bool saveJson = true)
+        {
+            try
+            {
+                if (json == null)
+                    throw new Exception("JSON for loading experience is null");
+
+                // TODO: Check whether versions match
+
+                // Reset pending asset counter
+                // pendingAssetLoads = 0;
+                pendingAssetLoadPaths.Clear();
+
+                // Update all fields from json
+                bool success = SetFromJson(json);
+
+                if (success)    // so manual refresh works
+                    themeHash = json["hash"].ToString();
+
+                if (saveJson)
+                    FileHandler.WriteString(json.ToString(), configFileName + ".json", CacheManager.cacheFolderName);
+
+                // If no assets need loading, invoke immediately
+                // if (pendingAssetLoads == 0)
+                if (pendingAssetLoadPaths.Count <= 0)
+                    onThemeUpdate?.Invoke();
+
+                return success;
+            }
+            catch (JsonException e)
+            {
+                Debug.LogError($"Failed to load theme JSON: {e.Message}");
+                return false;
+            }
+        }
+        #endregion Private_Methods
     }
 }

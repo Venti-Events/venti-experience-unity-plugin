@@ -244,7 +244,10 @@ public class VentiApiRequest : UnityWebRequest
         if (!url.StartsWith(apiUrl))
             url = apiUrl + url;
 
-        SetRequestHeader("Authorization", "Bearer " + TokenManager.Instance.appKey);
+        if (TokenManager.Instance == null)
+            throw new Exception("TokenManager is not initialized");
+
+        SetRequestHeader("Authorization", "Bearer " + TokenManager.Instance?.appKey);
         yield return SendWebRequest();
 
         if (result != Result.Success)
@@ -255,8 +258,8 @@ public class VentiApiRequest : UnityWebRequest
                 if (!autoRefreshToken)
                     yield break;
 
-                yield return TokenManager.Instance.RefreshTokenCoroutine();
-                if (TokenManager.Instance.refreshTokenResult != VentiApiRequest.Result.Success)
+                yield return TokenManager.Instance?.RefreshTokenCoroutine();
+                if (TokenManager.Instance?.refreshTokenResult != VentiApiRequest.Result.Success)
                     yield break;
 
                 yield return SendAuthenticatedApiRequest(false);

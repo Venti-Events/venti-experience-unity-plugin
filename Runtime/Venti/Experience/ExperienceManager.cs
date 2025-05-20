@@ -11,40 +11,31 @@ namespace Venti.Experience
 {
     public class ExperienceManager : Singleton<ExperienceManager>
     {
-        #region JSON_Items
         [field: SerializeField] public Metadata metaData { get; private set; }
         [field: SerializeField] public BaseField[] fields { get; private set; }
-        #endregion JSON_Items
 
-        #region Booleans
+        // Settings
         [Tooltip("Enabling this will include inactive GameObjects in search")]
         [SerializeField] private bool searchForInactive = false;
-        #endregion
 
-        #region Events
+        // Events
         public UnityEvent onMetadataUpdate;
         public UnityEvent onFieldsUpdate;
-        #endregion
 
-        #region Path_Constants
+        // Path Constants
         // public const string appFolderName = "cache";
         private const string configFileName = "app-config";
-        public const string getAppConfigUrl = @"/api/v1/experience-app/get-experience-app-configuration";
-        #endregion
+        private const string getAppConfigUrl = @"/experience-app/get-experience-app-configuration";
 
-        #region Private_Variables
+        // Private Variables
         private string appHash;
         private List<string> pendingAssetLoadPaths = new List<string>();
-        #endregion
 
         // TODO: queuedJson with pendingAssetLoadPaths
 
         #region Unity_Methods
         private void Start()
         {
-            appHash = PlayerPrefs.GetString("appHash", "");
-
-            //Debug.LogWarning("Booker-T");
             ClearFields();
             FetchChildFields();
 
@@ -59,7 +50,7 @@ namespace Venti.Experience
             if (hash != appHash)
             {
                 Debug.Log("App hashes mismatch. Re-fetch");
-                StartCoroutine(GetAppConfig(hash));
+                StartCoroutine(GetAppConfig());
             }
             else
                 Debug.Log("App hash is the same, no need to fetch again.");
@@ -68,6 +59,9 @@ namespace Venti.Experience
         public void FetchChildFields()
         {
             fields = Utils.FetchChildFields<BaseField>(gameObject, searchForInactive);
+
+            foreach (var field in fields)
+                field.SetAsyncLoadEvents(OnFieldLoadStart, OnFieldLoadEnd);
         }
 
         public void ClearFields()
@@ -139,13 +133,10 @@ namespace Venti.Experience
             return LoadJson(configJson, true);
         }
 
-        private IEnumerator GetAppConfig(string hash)
+        private IEnumerator GetAppConfig()
         {
-            Debug.Log("GetAppConfig");
-            string url = VentiManager.serverUrl + getAppConfigUrl;
-            Debug.Log("Fetching app config from: " + url + " with hash: " + hash);
-
-            using (VentiApiRequest www = VentiApiRequest.Get(url))
+            // Debug.Log("Fetching app config from: " + url + " with hash: " + hash);
+            using (VentiApiRequest www = VentiApiRequest.Get(getAppConfigUrl))
             {
                 yield return www.SendAuthenticatedApiRequest();
 
@@ -160,13 +151,10 @@ namespace Venti.Experience
                     Debug.Log("Fetched app json: " + jsonResponse);
 
                     bool success = LoadFromWebJson(jsonResponse);
-                    if (success)
-                    {
-                        appHash = hash;
-
-                        PlayerPrefs.SetString("appHash", appHash);
-                        PlayerPrefs.Save();
-                    }
+                    // if (success)
+                    // {
+                    //     appHash = hash;
+                    // }
                 }
             }
         }
@@ -219,9 +207,13 @@ namespace Venti.Experience
                     }
                 }
 
+                if (success)    // so manual refresh works
+                    appHash = json["hash"].ToString();
+
                 if (saveJson)
                     FileHandler.WriteString(json.ToString(), configFileName + ".json", CacheManager.cacheFolderName);
 
+                // if (success && pendingAssetLoadPaths.Count == 0)
                 if (pendingAssetLoadPaths.Count == 0)
                     onFieldsUpdate?.Invoke();
 
@@ -235,12 +227,12 @@ namespace Venti.Experience
         }
         #endregion
 
-        public void OnFieldLoadStart(string fieldId)
+        private void OnFieldLoadStart(string fieldId)
         {
             pendingAssetLoadPaths.Add(appHash + "/" + fieldId);
         }
 
-        public void OnFieldLoadEnd(string fieldId)
+        private void OnFieldLoadEnd(string fieldId)
         {
             bool removed = pendingAssetLoadPaths.Remove(appHash + "/" + fieldId);
             if (!removed)

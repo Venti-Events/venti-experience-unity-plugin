@@ -1,31 +1,21 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Networking;
 using SimpleJSON;
-using UnityEngine.SceneManagement;
 using PimDeWitte.UnityMainThreadDispatcher;
 using Venti.Theme;
 using Venti.Experience;
 using Venti.Token;
-using System;
-using System.Text;
-using System.Net.Http;
 
 namespace Venti
 {
     [RequireComponent(typeof(CacheManager))]
+    [RequireComponent(typeof(TokenManager))]
+    [RequireComponent(typeof(SessionManager))]
     [RequireComponent(typeof(UnityMainThreadDispatcher))]
     public class VentiManager : Singleton<VentiManager>
     {
-        // public Experience.ExperienceManager experienceManager;
-        // public Theme.ThemeManager themeManager;
-
         private SocketConnector socket;
-
-        public const string serverUrl = "https://venti-server-nestjs-128798841108.us-central1.run.app";
-        public const string getAppAndThemeHashesUrl = @"/api/v1/experience-app/get-experience-app-configuration-hash";
-        public const string getThemeUrl = @"/api/v1/project/get-project-theme-config";
-
+        public const string getAppAndThemeHashesUrl = @"/experience-app/get-experience-app-configuration-hash";
 
         void Start()
         {
@@ -40,29 +30,21 @@ namespace Venti
             //     Debug.LogError("PlayerPrefs doesn't have appKey saved");
             // }
 
-
-
-
             // Connect to server socket
-            socket = new SocketConnector(serverUrl, TokenManager.Instance.appKey);
+            socket = new SocketConnector(VentiApiRequest.serverUrl, TokenManager.Instance?.appKey);
         }
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.F5))
+            if (Input.GetKeyDown(KeyCode.F5)
+                && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
             {
                 Debug.Log("Force fetching hashes from server.");
-                FetchHashes();
+                StartCoroutine(GetHashes());
             }
         }
 
         #region PUBLIC_FUNCTIONS
-        // Fetch the hashes from the server
-        public void FetchHashes()
-        {
-            StartCoroutine(GetHashes());
-        }
-
         public void ParseHashesJson(string jsonStr)
         {
             JSONObject json = JSON.Parse(jsonStr).AsObject;
@@ -81,79 +63,27 @@ namespace Venti
                 ThemeManager.Instance?.FetchThemeConfig(fetchedThemeHash);
             }
         }
-
-        // Make an authenticated web request to Venti server
-        public void VentiWebRequest(string url, WebRequestMethod method, WWWForm form, Action<string> callback)
-        {
-            StartCoroutine(VentiWebRequestCoroutine(url, method, form, callback));
-        }
-
-        private IEnumerator VentiWebRequestCoroutine(string url, WebRequestMethod method, WWWForm form, Action<string> callback)
-        {
-            UnityWebRequest www;
-
-            switch (method)
-            {
-                case HttpMethod.Get:
-                    www = UnityWebRequest.Get(url);
-                    break;
-                case HttpMethod.Post:
-                    www = UnityWebRequest.Post(url, form);
-                    break;
-                case HttpMethod.Put:
-                    www = UnityWebRequest.Put(url, form);
-                    break;
-                case HttpMethod.Delete:
-                    www = UnityWebRequest.Delete(url);
-                    break;
-                default:
-                    throw new ArgumentException("Invalid HTTP method");
-            }
-
-            using (UnityWebRequest www = new UnityWebRequest(url, method))
-            {
-                www.SetRequestHeader("Authorization", "Bearer " + TokenManager.Instance.appKey);
-                www.SetRequestHeader("Content-Type", "application/json");
-                // www.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
-                yield return www.SendWebRequest();
-
-                if (www.result != UnityWebRequest.Result.Success)
-                {
-                    Debug.LogError("Error fetching hashes: " + www.error);
-                }
-                else
-                {
-                    callback(www.downloadHandler.text);
-                }
-            }
-        }
-
         #endregion
 
         #region PRIVATE_FUNCTIONS
         private IEnumerator GetHashes()
         {
-            string url = serverUrl + getAppAndThemeHashesUrl;
-
-            using (UnityWebRequest www = UnityWebRequest.Get(url))
+            using (VentiApiRequest www = VentiApiRequest.Post(getAppAndThemeHashesUrl, new WWWForm()))
             {
-                www.SetRequestHeader("Authorization", "Bearer " + appKey);
-                yield return www.SendWebRequest();
+                yield return www.SendAuthenticatedApiRequest();
 
-                if (www.result != UnityWebRequest.Result.Success)
-                {
+                if (www.result != VentiApiRequest.Result.Success)
                     Debug.LogError("Error fetching hashes: " + www.error);
-                }
                 else
-                {
                     ParseHashesJson(www.downloadHandler.text);
-                }
             }
         }
         #endregion
+
         void OnApplicationQuit()
         {
-            socket.Dispose();
+            if (socket != null)
+                socket.Dispose();
         }
     }
 

@@ -11,6 +11,7 @@ using System.IO;
 
 namespace Venti
 {
+    // TODO: Convert to a pure class instead of a singleton
     public class CacheManager : Singleton<CacheManager>
     {
         private Dictionary<string, CachedAsset> cache = new Dictionary<string, CachedAsset>();
@@ -343,19 +344,9 @@ namespace Venti
             public bool isCachePath;   // is filePath to cache dir or web url
         }
 
-        //private class CachedAsset<T>
-        //{
-        //    public T asset;
-        //    public string url;
-        //    public FileDetails fileDetails;
-        //    public bool isLoading = false;
-        //    public List<Action<T>> Callbacks = new List<Action<T>>();
-        //}
         private class CachedAsset
         {
             public string url;
-            // public string fileName;
-            // public string filePath;
             public FileDetails fileDetails;
             public CachedAssetType type;
             public UnityEngine.Object asset;

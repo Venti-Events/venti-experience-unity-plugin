@@ -6,9 +6,8 @@ using Venti;
 using PimDeWitte.UnityMainThreadDispatcher;
 using Venti.Experience;
 using Venti.Theme;
-using Venti.Session;
 
-public class SocketConnector: IDisposable
+public class SocketConnector : IDisposable
 {
     private SocketIOClient.SocketIO client;
 
