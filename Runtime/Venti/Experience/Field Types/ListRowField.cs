@@ -33,7 +33,7 @@ namespace Venti.Experience
 
             // Setup async value load events
             foreach (var field in value)
-                field.SetAsyncLoadEvents(OnFieldLoadStart, OnFieldLoadEnd);
+                field.SetAsyncLoadEvents(hash, OnFieldLoadStart, OnFieldLoadEnd);
         }
 
         public override void ClearFields()

@@ -61,7 +61,7 @@ namespace Venti.Experience
             fields = Utils.FetchChildFields<BaseField>(gameObject, searchForInactive);
 
             foreach (var field in fields)
-                field.SetAsyncLoadEvents(OnFieldLoadStart, OnFieldLoadEnd);
+                field.SetAsyncLoadEvents(appHash, OnFieldLoadStart, OnFieldLoadEnd);
         }
 
         public void ClearFields()
@@ -136,7 +136,7 @@ namespace Venti.Experience
         private IEnumerator GetAppConfig()
         {
             // Debug.Log("Fetching app config from: " + url + " with hash: " + hash);
-            using (VentiApiRequest www = VentiApiRequest.Get(getAppConfigUrl))
+            using (VentiApiRequest www = VentiApiRequest.GetApi(getAppConfigUrl))
             {
                 yield return www.SendAuthenticatedApiRequest();
 
@@ -229,12 +229,12 @@ namespace Venti.Experience
 
         private void OnFieldLoadStart(string fieldId)
         {
-            pendingAssetLoadPaths.Add(appHash + "/" + fieldId);
+            pendingAssetLoadPaths.Add(fieldId);
         }
 
         private void OnFieldLoadEnd(string fieldId)
         {
-            bool removed = pendingAssetLoadPaths.Remove(appHash + "/" + fieldId);
+            bool removed = pendingAssetLoadPaths.Remove(fieldId);
             if (!removed)
             {
                 Debug.LogError($"Asset path {appHash}/{fieldId} not found in pending field load paths for experienceManager");

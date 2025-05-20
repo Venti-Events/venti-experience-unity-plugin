@@ -120,43 +120,44 @@ public class VentiApiRequest : UnityWebRequest
     #endregion
 
     #region PUBLIC_STATIC_METHODS
-    public static new VentiApiRequest Get(string url)
+    // Use these instead of UnityWebRequest.Get, Post, Put, Delete
+    public static VentiApiRequest GetApi(string url)
     {
         return new VentiApiRequest(url, "GET", new DownloadHandlerBuffer(), null);
     }
 
-    public static new VentiApiRequest Post(string url, string postData, string contentType)
+    public static VentiApiRequest PostApi(string url, string postData, string contentType)
     {
         VentiApiRequest request = new VentiApiRequest(url, "POST");
         SetupPost(request, postData, contentType);
         return request;
     }
 
-    public static new VentiApiRequest Post(string url, WWWForm formData)
+    public static VentiApiRequest PostApi(string url, WWWForm formData)
     {
         VentiApiRequest request = new VentiApiRequest(url, "POST");
         SetupPost(request, formData);
         return request;
     }
 
-    public static new VentiApiRequest Post(string url, Dictionary<string, string> formFields)
+    public static VentiApiRequest PostApi(string url, Dictionary<string, string> formFields)
     {
         VentiApiRequest request = new VentiApiRequest(url, "POST");
         SetupPost(request, formFields);
         return request;
     }
 
-    public static new VentiApiRequest Put(string uri, byte[] bodyData)
+    public static VentiApiRequest PutApi(string uri, byte[] bodyData)
     {
         return new VentiApiRequest(uri, "PUT", new DownloadHandlerBuffer(), new UploadHandlerRaw(bodyData));
     }
 
-    public static new VentiApiRequest Put(string uri, string bodyData)
+    public static VentiApiRequest PutApi(string uri, string bodyData)
     {
         return new VentiApiRequest(uri, "PUT", new DownloadHandlerBuffer(), new UploadHandlerRaw(Encoding.UTF8.GetBytes(bodyData)));
     }
 
-    public static new VentiApiRequest Delete(string url)
+    public static VentiApiRequest DeleteApi(string url)
     {
         return new VentiApiRequest(url, "DELETE");
     }
@@ -164,6 +165,7 @@ public class VentiApiRequest : UnityWebRequest
     #endregion
 
     #region PRIVATE_STATIC_METHODS
+    // Copied from UnityWebRequest because they are private and cannot be inherited
     private static void SetupPost(VentiApiRequest request, string postData, string contentType)
     {
         request.downloadHandler = new DownloadHandlerBuffer();
@@ -223,17 +225,14 @@ public class VentiApiRequest : UnityWebRequest
     }
     #endregion
 
-    public new UnityWebRequestAsyncOperation SendWebRequest()
-    {
-        return SendApiRequest();
-    }
-
-    // Recommended to use this method instead of SendWebRequest
+    // Use this method instead of SendWebRequest
     public UnityWebRequestAsyncOperation SendApiRequest()
     {
         // Check if url does not start with apiUrl, add it
         if (!url.StartsWith(apiUrl))
             url = apiUrl + url;
+
+        Debug.Log($"Sending API request to: {url}");
 
         return SendWebRequest();
     }
@@ -247,7 +246,9 @@ public class VentiApiRequest : UnityWebRequest
         if (TokenManager.Instance == null)
             throw new Exception("TokenManager is not initialized");
 
-        SetRequestHeader("Authorization", "Bearer " + TokenManager.Instance?.appKey);
+        // TODO: Uncomment this after EEA2025 when access-token only guards are enforced
+        // SetRequestHeader("Authorization", "Bearer " + TokenManager.Instance?.accessToken);
+        SetRequestHeader("Authorization", "Bearer " + TokenManager.Instance?.refreshToken);
         yield return SendWebRequest();
 
         if (result != Result.Success)
@@ -266,5 +267,4 @@ public class VentiApiRequest : UnityWebRequest
             }
         }
     }
-
 }

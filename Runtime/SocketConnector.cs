@@ -23,7 +23,7 @@ public class SocketConnector : IDisposable
 
     private void ConnectToServer(string serverIp, string appKey)
     {
-        Debug.Log("Connecting to server at " + serverIp + " with appKey: " + appKey);
+        Debug.Log("Connecting to socket server at " + serverIp + " with appKey: " + appKey);
 
         client = new SocketIOClient.SocketIO(serverIp, new SocketIOClient.SocketIOOptions
         {

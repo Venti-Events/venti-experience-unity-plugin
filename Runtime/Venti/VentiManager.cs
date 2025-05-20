@@ -68,7 +68,7 @@ namespace Venti
         #region PRIVATE_FUNCTIONS
         private IEnumerator GetHashes()
         {
-            using (VentiApiRequest www = VentiApiRequest.Post(getAppAndThemeHashesUrl, new WWWForm()))
+            using (VentiApiRequest www = VentiApiRequest.PostApi(getAppAndThemeHashesUrl, new WWWForm()))
             {
                 yield return www.SendAuthenticatedApiRequest();
 

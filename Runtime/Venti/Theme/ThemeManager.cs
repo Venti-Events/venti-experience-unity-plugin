@@ -83,7 +83,7 @@ namespace Venti.Theme
         #region Private_Methods
         private IEnumerator GetThemeConfig()
         {
-            using (VentiApiRequest www = VentiApiRequest.Get(getThemeUrl))
+            using (VentiApiRequest www = VentiApiRequest.GetApi(getThemeUrl))
             {
                 yield return www.SendAuthenticatedApiRequest();
 

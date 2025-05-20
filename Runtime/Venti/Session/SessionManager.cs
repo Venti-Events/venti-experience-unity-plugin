@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using SimpleJSON;
 using UnityEngine;
@@ -12,9 +13,11 @@ namespace Venti
 
         private Session session;
 
+        private const string checkInAppUrl = @"https://venti-checkin.web.app";
         private const string getSessionUrl = @"/app-sessions";
         private const string getAttendeeUrl = @"/get-attendee-with-appKey";
         private const string endSessionUrl = @"/end-app-session";
+        private const string endAllActiveSessionsUrl = @"/end-all-active-sessions";
 
         public void FetchSession(string sessionId)
         {
@@ -24,7 +27,7 @@ namespace Venti
 
         private IEnumerator FetchSessionCoroutine(string sessionId)
         {
-            using (VentiApiRequest www = VentiApiRequest.Get($"{getSessionUrl}/{sessionId}"))
+            using (VentiApiRequest www = VentiApiRequest.GetApi($"{getSessionUrl}/{sessionId}"))
             {
                 yield return www.SendAuthenticatedApiRequest();
 
@@ -43,7 +46,7 @@ namespace Venti
 
         private IEnumerator FetchAttendeeCoroutine(string attendeeId)
         {
-            using (VentiApiRequest www = VentiApiRequest.Get($"{getAttendeeUrl}/{attendeeId}"))
+            using (VentiApiRequest www = VentiApiRequest.GetApi($"{getAttendeeUrl}/{attendeeId}"))
             {
                 yield return www.SendAuthenticatedApiRequest();
 
@@ -65,12 +68,24 @@ namespace Venti
             StartCoroutine(EndSessionCoroutine(score));
         }
 
+        public void ResetSessions()
+        {
+            StartCoroutine(EndAllActiveSessionsCoroutine());
+        }
+
+        public string GetCheckInAppUrl(string returnUrl, string roomId)
+        {
+            Uri abc = new Uri(checkInAppUrl);
+            // abc.Query = "appKey=" + appKey;
+            return abc.ToString();
+        }
+
         public IEnumerator EndSessionCoroutine(int score)
         {
             JSONObject dataJson = new JSONObject();
             dataJson["score"] = score;
 
-            using (VentiApiRequest www = VentiApiRequest.Put($"{endSessionUrl}/{session.id}", dataJson.ToString()))
+            using (VentiApiRequest www = VentiApiRequest.PutApi($"{endSessionUrl}/{session.id}", dataJson.ToString()))
             {
                 yield return www.SendAuthenticatedApiRequest();
 
@@ -83,6 +98,24 @@ namespace Venti
                 }
             }
         }
+
+        private IEnumerator EndAllActiveSessionsCoroutine()
+        {
+            using (VentiApiRequest www = VentiApiRequest.GetApi(endAllActiveSessionsUrl))
+            {
+                yield return www.SendAuthenticatedApiRequest();
+
+                if (www.result != VentiApiRequest.Result.Success)
+                    Debug.LogError("Error ending all active sessions: " + www.error);
+                else
+                {
+                    Debug.Log("All active sessions ended: " + www.downloadHandler.text);
+                }
+            }
+        }
+
+
+
 
         // public void EndSessionCoroutine(Texture2D photo)
         // {

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using SimpleJSON;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -7,13 +8,14 @@ namespace Venti.Token
 {
     public class TokenManager : Singleton<TokenManager>
     {
+        public string appKeyScanScene = "AppKeyScan";
         public string appKey { get; private set; }
         public string refreshToken { get; private set; }
         public string accessToken { get; private set; }
 
         public VentiApiRequest.Result refreshTokenResult { get; private set; }
 
-        public const string refreshTokenUrl = "/auth/refresh-token";
+        public const string refreshTokenUrl = "/project-license/get-access-token";
 
         void Start()
         {
@@ -24,19 +26,57 @@ namespace Venti.Token
             }
             else
             {
-                // SceneManager.LoadScene("QRScanScene");
                 Debug.LogError("PlayerPrefs doesn't have appKey saved");
+                SceneManager.LoadScene(appKeyScanScene);
+                return;
             }
+
+            if (PlayerPrefs.HasKey("refreshToken"))
+            {
+                refreshToken = PlayerPrefs.GetString("refreshToken");
+                Debug.Log($"Loaded saved refreshToken: {refreshToken}");
+            }
+            else
+            {
+                Debug.LogError("PlayerPrefs doesn't have refreshToken saved");
+                RefreshToken();
+                return;
+            }
+
+            if (PlayerPrefs.HasKey("accessToken"))
+            {
+                accessToken = PlayerPrefs.GetString("accessToken");
+                Debug.Log($"Loaded saved accessToken: {accessToken}");
+            }
+            else
+            {
+                Debug.LogError("PlayerPrefs doesn't have accessToken saved");
+                RefreshToken();
+                return;
+            }
+        }
+
+        [ContextMenu("Delete App Key")]
+        private void DeleteSavedAppKey()
+        {
+            if (PlayerPrefs.HasKey("appKey"))
+            {
+                PlayerPrefs.DeleteKey("appKey");
+                PlayerPrefs.Save();
+            }
+
+            Debug.Log("appKey has been deleted");
         }
 
         public void RefreshToken()
         {
-            // TODO: Refresh token
+            StartCoroutine(RefreshTokenCoroutine());
         }
 
         public IEnumerator RefreshTokenCoroutine()
         {
-            using (VentiApiRequest request = VentiApiRequest.Post(refreshTokenUrl, new Dictionary<string, string> { { "appKey", appKey } }))
+            using (VentiApiRequest request = VentiApiRequest.PostApi(refreshTokenUrl,
+                    new Dictionary<string, string> { { "token", appKey } }))
             {
                 yield return request.SendAuthenticatedApiRequest(false);
 
@@ -49,7 +89,7 @@ namespace Venti.Token
                         Debug.LogError("App-Key is invalid");
 
                         // Go to App-Key QR Scan Scene
-                        SceneManager.LoadScene("QRScanScene");
+                        SceneManager.LoadScene(appKeyScanScene);
                         yield break;
                     }
 
@@ -57,21 +97,13 @@ namespace Venti.Token
                     yield break;
                 }
 
-                TokenResponse response = JsonUtility.FromJson<TokenResponse>(request.downloadHandler.text);
-                SetTokens(response.refreshToken, response.accessToken);
+                JSONObject response = JSON.Parse(request.downloadHandler.text).AsObject;
+                if (response["data"] != null)
+                {
+                    JSONObject data = response["data"].AsObject;
+                    SetTokens(data["newRefreshToken"].Value, data["accessToken"].Value);
+                }
             }
-        }
-
-        [ContextMenu("Delete App Key")]
-        private void DeletePlayerSavedAppKey()
-        {
-            if (PlayerPrefs.HasKey("appKey"))
-            {
-                PlayerPrefs.DeleteKey("appKey");
-                PlayerPrefs.Save();
-            }
-
-            Debug.Log("appKey has been cleared.");
         }
 
         private void SetTokens(string refreshToken, string accessToken)
@@ -84,10 +116,10 @@ namespace Venti.Token
             PlayerPrefs.Save();
         }
 
-        private class TokenResponse
-        {
-            public string refreshToken;
-            public string accessToken;
-        }
+        // private class TokenResponse
+        // {
+        //     public string newRefreshToken;
+        //     public string accessToken;
+        // }
     }
 }

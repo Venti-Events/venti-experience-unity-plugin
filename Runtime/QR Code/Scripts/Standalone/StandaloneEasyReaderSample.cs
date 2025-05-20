@@ -6,12 +6,13 @@ using System.Collections;
 using System.Text;
 using System;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class StandaloneEasyReaderSample : MonoBehaviour
 {
     [Header("Scan Result")]
     [SerializeField]
-    private string lastResult;
+    private string appKey;
 
     [Header("Webcam Settings")]
     [SerializeField]
@@ -39,7 +40,6 @@ public class StandaloneEasyReaderSample : MonoBehaviour
     private WebCamTexture camTexture;
     private Color32[] cameraColorData;
     private int width, height;
-    private Rect screenRect;
 
     private IBarcodeReader barcodeReader = new BarcodeReader
     {
@@ -53,22 +53,22 @@ public class StandaloneEasyReaderSample : MonoBehaviour
     private Result result;
 
     [Serializable]
-    private class CodeRequest { public string code; }
+    private class CodeRequest { public string otp; }
     [Serializable]
-    private class RefreshTokenResponse { public string appId; }
+    private class RefreshTokenResponse { public string data; }
 
-    private const string refreshUrl = "https://pdm18slv-3000.inc1.devtunnels.ms/api/v1/project-license/3192dd59-361a-4910-bd85-1f713c37f7bf/get-refresh-token";
+    // private const string refreshUrl = "/project-license/3192dd59-361a-4910-bd85-1f713c37f7bf/get-refresh-token";
+    private const string refreshUrl = @"/project-license/get-refresh-token";
 
     private void Start()
     {
-        lastResult = PlayerPrefs.GetString("appId", "http://www.google.com");
+        appKey = PlayerPrefs.GetString("appKey", "");
 
         //if (WebCamTexture.devices.Length == 0)
         //{
         //    EnableManualInput();
         //    return;
         //}
-
 
         EnableManualInput();
         //DisableManualInput();
@@ -79,10 +79,47 @@ public class StandaloneEasyReaderSample : MonoBehaviour
         if (webcamRawImage != null && webcamRenderTexture != null)
         {
             webcamRawImage.texture = webcamRenderTexture;
+            webcamRawImage.GetComponent<AspectRatioFitter>().aspectRatio = (float)width / (float)height;
         }
 
         cameraColorData = new Color32[width * height];
-        screenRect = new Rect(0, 0, Screen.width, Screen.height);
+    }
+
+    private void Update()
+    {
+        if (camTexture != null && camTexture.isPlaying)
+        {
+            if (webcamRenderTexture != null)
+            {
+                Graphics.Blit(camTexture, webcamRenderTexture);
+            }
+
+            camTexture.GetPixels32(cameraColorData);
+            result = barcodeReader.Decode(cameraColorData, width, height);
+            if (result != null)
+            {
+                appKey = result.Text;
+                Debug.Log($"Scanned: {appKey}");
+
+                PlayerPrefs.SetString("appKey", appKey);//appkey replace
+                PlayerPrefs.Save();
+
+                DisableManualInput();
+                // SceneManager.LoadScene(0);
+            }
+        }
+    }
+
+    [ContextMenu("Delete App Key")]
+    private void DeletePlayerSavedAppKey()
+    {
+        if (PlayerPrefs.HasKey("appKey"))
+        {
+            PlayerPrefs.DeleteKey("appKey");
+            PlayerPrefs.Save();
+        }
+
+        Debug.Log("appKey has been cleared.");
     }
 
     private void EnableManualInput()
@@ -116,68 +153,49 @@ public class StandaloneEasyReaderSample : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        if (camTexture != null && camTexture.isPlaying)
-        {
-            if (webcamRenderTexture != null)
-            {
-                Graphics.Blit(camTexture, webcamRenderTexture);
-            }
-
-            camTexture.GetPixels32(cameraColorData);
-            result = barcodeReader.Decode(cameraColorData, width, height);
-            if (result != null)
-            {
-                lastResult = result.Text;
-                Debug.Log($"Scanned: {lastResult}");
-                PlayerPrefs.SetString("appId", lastResult);//appkey replace
-                PlayerPrefs.Save();
-            }
-        }
-    }
-
     private IEnumerator SendCodeCoroutine(string code)
     {
-        var req = new CodeRequest { code = code };
+        var req = new CodeRequest { otp = code };
         string json = JsonUtility.ToJson(req);
+        // byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
 
-        using (var uwr = new UnityWebRequest(refreshUrl, "POST"))
+        using (var www = VentiApiRequest.PostApi(refreshUrl, json, "application/json"))
         {
-            byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
-            uwr.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            uwr.downloadHandler = new DownloadHandlerBuffer();
-            uwr.SetRequestHeader("Content-Type", "application/json");
+            // byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
+            // uwr.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            // uwr.downloadHandler = new DownloadHandlerBuffer();
+            // uwr.SetRequestHeader("Content-Type", "application/json");
 
-            yield return uwr.SendWebRequest();
+            yield return www.SendApiRequest();
 
-            if (uwr.result == UnityWebRequest.Result.Success)
+            if (www.result == VentiApiRequest.Result.Success)
             {
-                var resp = JsonUtility.FromJson<RefreshTokenResponse>(uwr.downloadHandler.text);
-                lastResult = resp.appId;
-                Debug.Log($"Received appId: {lastResult}");
-                PlayerPrefs.SetString("appId", lastResult);
+                Debug.Log($"Code request success: {www.downloadHandler.text}");
+
+                var resp = JsonUtility.FromJson<RefreshTokenResponse>(www.downloadHandler.text);
+                appKey = resp.data;
+
+                Debug.Log($"Received appKey: {appKey}");
+
+                PlayerPrefs.SetString("appKey", appKey);
                 PlayerPrefs.Save();
+
                 DisableManualInput();
+
+                // SceneManager.LoadScene(0);
             }
             else
             {
-                Debug.LogError($"Code request failed: {uwr.error}");
+                Debug.LogError($"Code request failed: {www.error} \n {www.downloadHandler.text}");
                 submitButton.interactable = true;
             }
         }
     }
 
-    private void OnGUI()
-    {
-        GUI.TextField(new Rect(10, 10, 512, 25), lastResult);
-    }
-
-    private void OnDestroy()
-    {
-        if (camTexture != null)
-            camTexture.Stop();
-    }
+    // private void OnGUI()
+    // {
+    //     GUI.TextField(new Rect(10, 10, 512, 25), lastResult);
+    // }
 
     private void LogWebcamDevices()
     {
@@ -204,4 +222,11 @@ public class StandaloneEasyReaderSample : MonoBehaviour
         width = camTexture.width;
         height = camTexture.height;
     }
+
+    private void OnDestroy()
+    {
+        if (camTexture != null)
+            camTexture.Stop();
+    }
+
 }
