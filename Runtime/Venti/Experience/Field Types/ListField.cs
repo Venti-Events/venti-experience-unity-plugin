@@ -160,9 +160,9 @@ namespace Venti.Experience
 
                 ListRowField rowField = rowObj.AddComponent<ListRowField>();
                 rowField.id = rowJson["id"];
-                rowField.GenerateGameobjectName();
+                rowField.GenerateGameObjectName();
                 rowField.GenerateFields(header.value);
-                rowField.SetAsyncLoadEvents(OnRowLoadStart, OnRowLoadEnd);
+                rowField.SetAsyncLoadEvents(hash, OnRowLoadStart, OnRowLoadEnd);
                 rowField.SetFromJson(rowJson);
 
                 value[i] = rowField;

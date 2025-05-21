@@ -7,7 +7,7 @@ public class QRSceneImporter
     [InitializeOnLoadMethod]
     private static void CopySceneToProject()
     {
-        const string targetScenePath = "Assets/Scenes/QRScanScene.unity";
+        const string targetScenePath = "Assets/Scenes/AppKeyScan.unity";
 
         if (AssetDatabase.LoadAssetAtPath<SceneAsset>(targetScenePath) != null)
             return;
@@ -15,7 +15,7 @@ public class QRSceneImporter
         string sourceScenePath = FindSceneInPackage();
         if (string.IsNullOrEmpty(sourceScenePath))
         {
-            Debug.LogError("[QRSceneImporter] QRScanScene not found in the package.");
+            Debug.LogError("[QRSceneImporter] AppKeyScan not found in the package.");
             return;
         }
 
@@ -25,7 +25,7 @@ public class QRSceneImporter
         //if (!string.IsNullOrEmpty(error))
         //    Debug.LogError($"[QRSceneImporter] Failed to copy scene: {error}");
         //else
-        //    Debug.Log("[QRSceneImporter] QRScanScene copied to project successfully.");
+        //    Debug.Log("[QRSceneImporter] AppKeyScan copied to project successfully.");
 
         //AssetDatabase.Refresh();
     }
@@ -35,7 +35,7 @@ public class QRSceneImporter
         string[] allAssetPaths = AssetDatabase.GetAllAssetPaths();
         foreach (string path in allAssetPaths)
         {
-            if (path.EndsWith("QRScanScene.unity") && path.Contains("Packages/"))
+            if (path.EndsWith("AppKeyScan.unity") && path.Contains("Packages/"))
                 return path;
         }
         return null;

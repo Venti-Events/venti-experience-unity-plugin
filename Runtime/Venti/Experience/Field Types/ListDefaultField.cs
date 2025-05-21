@@ -34,7 +34,7 @@ namespace Venti.Experience
 
             ListRowField rowField = row.AddComponent<ListRowField>();
             rowField.GenerateRandomId();
-            rowField.GenerateGameobjectName();
+            rowField.GenerateGameObjectName();
 
             // Duplicate the header fields in the row
             rowField.GenerateFields(header.value);

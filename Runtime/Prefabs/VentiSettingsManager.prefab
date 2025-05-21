@@ -689,14 +689,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   <metaData>k__BackingField:
-    experienceId: 
-    name: 
-    description: 
+    experienceId: photobooth-test
+    name: Test Photobooth
+    description: Photobooth experience for testing purposes
     icon: 
     version:
       major: 0
       minor: 0
-      patch: 0
+      patch: 1
       status: 0
     publisher: 
     tags: []
@@ -721,6 +721,9 @@ MonoBehaviour:
   onMetadataUpdate:
     m_PersistentCalls:
       m_Calls: []
+  onFieldsUpdate:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &8241541060210376183
 GameObject:
   m_ObjectHideFlags: 0
@@ -733,6 +736,8 @@ GameObject:
   - component: {fileID: 9221337731318125250}
   - component: {fileID: 6367581535634959282}
   - component: {fileID: 34657763268648166}
+  - component: {fileID: 8637464343043409273}
+  - component: {fileID: 5873425500598413851}
   m_Layer: 0
   m_Name: VentiSettingsManager
   m_TagString: Untagged
@@ -769,9 +774,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8613df2ac8fb66d4aba5b55a92b93656, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  experienceManager: {fileID: 228301724138590192}
-  themeManager: {fileID: 3700881465815306927}
-  appKey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcmoiOiI2YTI1ZDZjNy04MDRhLTRhMDItYjA2ZC0yZjEzYmM3ZTU0MGEiLCJhcHAiOiJkYjY5MGUxZC1jZWZiLTRkMTAtOGI0MS1kNGY4ZDFmNjMzMDEiLCJqdGkiOiJiZmRmYTk2NC04MDQ5LTRlOGQtYTAxYy1mMDFhNDI2MzFiOWQiLCJydGMiOjAsImlzcyI6InNlcnZlciIsImlhdCI6MTc0NjUyODYxMiwiZXhwIjoxNzQ2NjYyNDAwLCJsdmEiOjE3NDQ4NDgwMDAsIm1vZCI6ImRlbW8ifQ.8zj7UAM5IvjSPQre7p18a2YcdKnFgrvFJ07trqCzAmc
 --- !u!114 &6367581535634959282
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -796,6 +798,61 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e4294dcfb0a0ded448e589db5caf57b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &8637464343043409273
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8241541060210376183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89184f157b53f5b42a9bcdb187fc321d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  appKeyScanScene: AppKeyScan
+--- !u!114 &5873425500598413851
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8241541060210376183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54fe5d0b4c4cd1e4e8500db9642ca29d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onSessionStart:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: AttendeeName, Assembly-CSharp
+        m_MethodName: OnSessionStart
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  onSessionEnd:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: AttendeeName, Assembly-CSharp
+        m_MethodName: OnSessionEnd
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &8295223825922678252
 GameObject:
   m_ObjectHideFlags: 0

@@ -38,7 +38,7 @@ namespace Venti.Experience
             if (GUILayout.Button("Generate JSON"))
             {
                 if (script != null)
-                    script.ExportJson();
+                    script.SaveJson();
                 else
                     Debug.LogWarning("DataManager script is null.");
             }

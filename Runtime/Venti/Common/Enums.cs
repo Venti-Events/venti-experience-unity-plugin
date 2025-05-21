@@ -10,4 +10,12 @@ namespace Venti
         Audio,
         Font
     }
+
+    public enum WebRequestMethod
+    {
+        Get,
+        Post,
+        Put,
+        Delete
+    }
 }

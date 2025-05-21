@@ -16,6 +16,9 @@ namespace Venti.Theme
         public Background background;
         [SerializeField][ReadOnly] private string hash;
 
+        // private Action<string> valueLoadStartEvent;
+        // private Action<string> valueLoadEndEvent;
+
         public bool SetFromJson(JSONObject json)
         {
             if (json == null)
@@ -38,6 +41,22 @@ namespace Venti.Theme
 
             return true;
         }
+
+        // public void SetAsyncLoadEvents(Action<string> onValueLoadStart, Action<string> onValueLoadEnd)
+        // {
+        //     valueLoadStartEvent = onValueLoadStart;
+        //     valueLoadEndEvent = onValueLoadEnd;
+        // }
+
+        // protected void OnAsyncValueLoadStart(string value)
+        // {
+        //     valueLoadStartEvent?.Invoke(value);
+        // }
+
+        // protected void OnAsyncValueLoadEnd(string value)
+        // {
+        //     valueLoadEndEvent?.Invoke(value);
+        // }
 
         [Serializable]
         public class Header
@@ -86,13 +105,13 @@ namespace Venti.Theme
                 Enum.TryParse<Alignment>(json["alignment"].Value, true, out alignment);
                 imageUrl = json["imageUrl"];
 
-                ThemeManager.Instance.OnAssetLoadStart(imageUrl);
-                CacheManager.Instance.GetAsset(imageUrl, CachedAssetType.Image, (texture) =>
+                ThemeManager.Instance?.OnAssetLoadStart(imageUrl);
+                CacheManager.Instance?.GetAsset(imageUrl, CachedAssetType.Image, (texture) =>
                 {
                     if (texture == null)
                         return;
                     image = texture as Texture2D;
-                    ThemeManager.Instance.OnAssetLoadEnd(imageUrl);
+                    ThemeManager.Instance?.OnAssetLoadEnd(imageUrl);
                 });
 
                 return true;
@@ -225,18 +244,18 @@ namespace Venti.Theme
                     }
 
                     if (newFontUrl == null)
-                        {
-                            Debug.LogError("No variant found for font");
-                            return false;
-                        }
+                    {
+                        Debug.LogError("No variant found for font");
+                        return false;
+                    }
 
-                    ThemeManager.Instance.OnAssetLoadStart(newFontUrl);
-                    CacheManager.Instance.GetAsset(newFontUrl, CachedAssetType.Font, (font) =>
+                    ThemeManager.Instance?.OnAssetLoadStart(newFontUrl);
+                    CacheManager.Instance?.GetAsset(newFontUrl, CachedAssetType.Font, (font) =>
                     {
                         if (font == null)
                             return;
                         fontAsset = font as TMPro.TMP_FontAsset;
-                        ThemeManager.Instance.OnAssetLoadEnd(newFontUrl);
+                        ThemeManager.Instance?.OnAssetLoadEnd(newFontUrl);
                     });
 
                     return true;
@@ -320,7 +339,6 @@ namespace Venti.Theme
                 }
             }
         }
-
     }
 
     [Serializable]
@@ -439,22 +457,22 @@ namespace Venti.Theme
 
             ColorUtility.TryParseHtmlString(color, out colorValue);
 
-            ThemeManager.Instance.OnAssetLoadStart(portraitImageUrl);
-            CacheManager.Instance.GetAsset(portraitImageUrl, CachedAssetType.Image, (texture) =>
+            ThemeManager.Instance?.OnAssetLoadStart(portraitImageUrl);
+            CacheManager.Instance?.GetAsset(portraitImageUrl, CachedAssetType.Image, (texture) =>
             {
                 if (texture == null)
                     return;
                 portraitImage = texture as Texture2D;
-                ThemeManager.Instance.OnAssetLoadEnd(portraitImageUrl);
+                ThemeManager.Instance?.OnAssetLoadEnd(portraitImageUrl);
             });
 
-            ThemeManager.Instance.OnAssetLoadStart(landscapeImageUrl);
-            CacheManager.Instance.GetAsset(landscapeImageUrl, CachedAssetType.Image, (texture) =>
+            ThemeManager.Instance?.OnAssetLoadStart(landscapeImageUrl);
+            CacheManager.Instance?.GetAsset(landscapeImageUrl, CachedAssetType.Image, (texture) =>
             {
                 if (texture == null)
                     return;
                 landscapeImage = texture as Texture2D;
-                ThemeManager.Instance.OnAssetLoadEnd(landscapeImageUrl);
+                ThemeManager.Instance?.OnAssetLoadEnd(landscapeImageUrl);
             });
 
             return true;

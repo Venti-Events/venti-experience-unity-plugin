@@ -16,10 +16,12 @@ namespace Venti.Experience
         [SerializeField][ReadOnly] protected string hash;
 
         [field: NonSerialized] public virtual FieldType? type { get; protected set; } = null;
+
+        private string eventCallPrefix;
         private Action<string> valueLoadStartEvent;
         private Action<string> valueLoadEndEvent;
 
-        public void GenerateGameobjectName()
+        public void GenerateGameObjectName()
         {
             name = $"{id} ({type})";
         }
@@ -27,7 +29,7 @@ namespace Venti.Experience
         public virtual void FetchChildFields(bool searchForInactive = false)
         {
             // Tasks to do when parent tries to fetch child fields
-            GenerateGameobjectName();
+            GenerateGameObjectName();
         }
 
         public virtual void ClearFields()
@@ -66,20 +68,25 @@ namespace Venti.Experience
             return true;
         }
 
-        public void SetAsyncLoadEvents(Action<string> onValueLoadStart, Action<string> onValueLoadEnd)
-        {
+        public void SetAsyncLoadEvents(string prefix, Action<string> onValueLoadStart, Action<string> onValueLoadEnd)
+        {                
+            if (prefix == null)
+                eventCallPrefix = "";
+            else
+                eventCallPrefix = prefix;
+
             valueLoadStartEvent = onValueLoadStart;
             valueLoadEndEvent = onValueLoadEnd;
         }
 
         protected void OnAsyncValueLoadStart(string value)
         {
-            valueLoadStartEvent?.Invoke(value);
+            valueLoadStartEvent?.Invoke(eventCallPrefix + "/" + value);
         }
 
         protected void OnAsyncValueLoadEnd(string value)
         {
-            valueLoadEndEvent?.Invoke(value);
+            valueLoadEndEvent?.Invoke(eventCallPrefix + "/" + value);
         }
     }
 }
