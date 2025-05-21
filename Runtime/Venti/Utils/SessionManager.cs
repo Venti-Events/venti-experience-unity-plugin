@@ -4,11 +4,13 @@ using System.Web;
 using SimpleJSON;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Networking;
 
 namespace Venti
 {
     public class SessionManager : Singleton<SessionManager>
     {
+        [field: SerializeField] public Session session { get; private set; } = new Session();
         public UnityEvent<Session> onSessionStart;
         public UnityEvent onSessionEnd;
 
@@ -16,7 +18,6 @@ namespace Venti
         // public string sessionId { get; private set; }
         // public string attendeeId {get; private set; }
         // public Attendee attendee { get; private set; }
-        private Session session = new Session();
 
         private const string checkInAppUrl = @"https://venti-checkin.web.app";
         // private const string getSessionUrl = @"/app-sessions";
@@ -192,8 +193,9 @@ namespace Venti
             }
 
             Debug.Log("Ending session: " + session.id);
+            Debug.Log("Data JSON: " + dataJsonStr);
 
-            using (VentiApiRequest www = VentiApiRequest.PutApi($"{endSessionUrl}/{session.id}", dataJsonStr))
+            using (VentiApiRequest www = VentiApiRequest.PutApi($"{endSessionUrl}/{session.id}", dataJsonStr, "application/json"))
             {
                 yield return www.SendAuthenticatedApiRequest();
 
@@ -245,6 +247,7 @@ namespace Venti
 
     }
 
+    [Serializable]
     public class Session
     {
         public string id;
@@ -268,6 +271,7 @@ namespace Venti
         // }
     }
 
+    [Serializable]
     public class Attendee
     {
         public string id;

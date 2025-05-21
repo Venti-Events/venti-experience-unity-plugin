@@ -148,14 +148,18 @@ namespace Venti
             return request;
         }
 
-        public static VentiApiRequest PutApi(string uri, byte[] bodyData)
+        public static VentiApiRequest PutApi(string uri, byte[] bodyData, string contentType)
         {
-            return new VentiApiRequest(uri, "PUT", new DownloadHandlerBuffer(), new UploadHandlerRaw(bodyData));
+            VentiApiRequest request = new VentiApiRequest(uri, "PUT", new DownloadHandlerBuffer(), new UploadHandlerRaw(bodyData));
+            request.SetRequestHeader("Content-Type", contentType);
+            return request;
         }
 
-        public static VentiApiRequest PutApi(string uri, string bodyData)
+        public static VentiApiRequest PutApi(string uri, string bodyData, string contentType)
         {
-            return new VentiApiRequest(uri, "PUT", new DownloadHandlerBuffer(), new UploadHandlerRaw(Encoding.UTF8.GetBytes(bodyData)));
+            VentiApiRequest request = new VentiApiRequest(uri, "PUT", new DownloadHandlerBuffer(), new UploadHandlerRaw(Encoding.UTF8.GetBytes(bodyData)));
+            request.SetRequestHeader("Content-Type", contentType);
+            return request;
         }
 
         public static VentiApiRequest DeleteApi(string url)
@@ -232,8 +236,7 @@ namespace Venti
             // Check if url does not start with apiUrl, add it
             if (!url.StartsWith(apiUrl))
                 url = apiUrl + url;
-
-            Debug.Log($"Sending API request to: {url}");
+            // Debug.Log($"Sending API request to: {url}");
 
             return SendWebRequest();
         }
