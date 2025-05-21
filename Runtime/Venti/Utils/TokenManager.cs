@@ -128,7 +128,7 @@ namespace Venti
                 return null;
             }
 
-            Debug.Log("Token parts: " + tokenParts[1]);
+            // Debug.Log("Token parts: " + tokenParts[1]);
 
             string payloadJsonString = DecodeBase64(tokenParts[1]);
             if (payloadJsonString == null)

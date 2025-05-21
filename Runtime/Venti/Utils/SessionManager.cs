@@ -83,9 +83,25 @@ namespace Venti
 
             // Build the check-in app URL
             string checkInAppVerificationUrl = checkInAppUrl + "/verification/" + token.projectId + "/" + token.appId;
-            UriBuilder checkInAppUrlBuilder = new UriBuilder(checkInAppVerificationUrl);
+            // UriBuilder checkInAppUrlBuilder = new UriBuilder(checkInAppVerificationUrl);
+            // return checkInAppUrlBuilder.Uri.AbsolutePath;
+            return checkInAppVerificationUrl;
+        }
 
-            return checkInAppUrlBuilder.Uri.AbsolutePath;
+        public string GetRegistrationTabUrl()
+        {
+            TokenPayload token = TokenManager.Instance.GetTokenPayload();
+            if (token == null)
+            {
+                Debug.LogError("No token found");
+                return null;
+            }
+
+            // Build the check-in app URL
+            string checkInAppRegistrationUrl = checkInAppUrl + "/registration/" + token.projectId;
+            // UriBuilder checkInAppUrlBuilder = new UriBuilder(checkInAppRegistrationUrl);
+            // return checkInAppUrlBuilder.Uri.AbsolutePath;
+            return checkInAppRegistrationUrl;
         }
 
         public string GetCheckInAppUrl(string redirectBaseUrl, string roomId)

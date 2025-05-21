@@ -64,7 +64,9 @@ namespace Venti
                 if (Input.GetKeyDown(KeyCode.T))
                 {
                     // Debug.Log("Token: " + TokenManager.Instance?.refreshToken);
-                    Debug.Log(SessionManager.Instance.GetCheckInAppUrl("https://google.com/?foo=bar", "1234567890"));
+                    Debug.Log("Registration Tab URL: " + SessionManager.Instance.GetRegistrationTabUrl());
+                    Debug.Log("Companion Tab URL: " + SessionManager.Instance.GetCompanionTabUrl());
+                    // Debug.Log(SessionManager.Instance.GetCheckInAppUrl("https://google.com/?foo=bar", "1234567890"));
                 }
             }
         }
