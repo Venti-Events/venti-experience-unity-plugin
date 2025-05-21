@@ -5,12 +5,15 @@ using SimpleJSON;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Networking;
+using Venti.Plugins.Leaderboard;
 
 namespace Venti
 {
     public class SessionManager : Singleton<SessionManager>
     {
         [field: SerializeField] public Session session { get; private set; } = new Session();
+
+        // public LeaderboardHandler leaderboard;
         public UnityEvent<Session> onSessionStart;
         public UnityEvent onSessionEnd;
 
@@ -213,6 +216,8 @@ namespace Venti
                 {
                     Debug.Log("Session ended: " + www.downloadHandler.text);
                     onSessionEnd.Invoke();
+
+                    // leaderboard.LoadLeaderboard(session.attendee.id);
 
                     FetchActiveSession();
                 }

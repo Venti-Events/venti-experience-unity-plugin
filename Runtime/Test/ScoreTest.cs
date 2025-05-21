@@ -32,8 +32,7 @@ public class ScoreTest : MonoBehaviour
 
     public void OnSessionEnd()
     {
-        leaderboardHandler.LoadLeaderboard(score);
+        leaderboardHandler.LoadLeaderboard();
         leaderboardHandler.ShowLeaderboard();
-
     }
 }

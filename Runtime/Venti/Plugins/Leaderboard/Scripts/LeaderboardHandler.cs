@@ -14,19 +14,17 @@ namespace Venti.Plugins.Leaderboard
         public GameObject itemPrefab;
         public Transform itemsContainer;
 
-        public UnityEvent onLeaderboardLoaded;
-
+        [SerializeField] private LeaderboardItem currentAttendee;
         [SerializeField] private List<LeaderboardItem> leaderboardItems = new List<LeaderboardItem>();
-        private int currentAttendeeRank = -1;
-        private int currentAttendeeScore = 0;
+        public UnityEvent onLeaderboardLoaded;
 
         private const string leaderboardUrl = "/project-attendee-leaderboard/get-by-appkey";
         private const int itemsLimit = 10;
 
-        // void Start()
-        // {
-        //     LoadLeaderboard(0);
-        // }
+        void OnEnable()
+        {
+            LoadLeaderboard();
+        }
 
         public void ShowLeaderboard()
         {
@@ -38,37 +36,35 @@ namespace Venti.Plugins.Leaderboard
             leaderboardPanel.gameObject.SetActive(false);
         }
 
-        public void LoadLeaderboard(int currentScore)
+        public void LoadLeaderboard(string currentAttendeeId = null)
         {
-            currentAttendeeScore = currentScore;
-            StartCoroutine(LoadLeaderboardCoroutine());
+            StartCoroutine(LoadLeaderboardCoroutine(currentAttendeeId));
         }
 
-        private IEnumerator LoadLeaderboardCoroutine()
+        private IEnumerator LoadLeaderboardCoroutine(string currentAttendeeId = null)
         {
             // Fetch leaderboard
-            yield return FetchLeaderboardCoroutine();
+            yield return FetchLeaderboardCoroutine(currentAttendeeId);
 
             // Render leaderboard
             RenderLeadboard();
         }
 
-        private IEnumerator FetchLeaderboardCoroutine()
+        private IEnumerator FetchLeaderboardCoroutine(string currentAttendeeId = null)
         {
-            string attendeeId = SessionManager.Instance?.session?.attendee?.id;
+            string attendeeId = currentAttendeeId ?? SessionManager.Instance?.session?.attendee?.id;
 
             VentiApiRequest www;
             if (attendeeId == null)
             {
-                currentAttendeeRank = -1;
-                currentAttendeeScore = 0;
+                currentAttendee = null;
                 www = VentiApiRequest.GetApi(leaderboardUrl + "?limit=" + itemsLimit);
-                Debug.Log("Leaderboard URL: " + leaderboardUrl + "?limit=" + itemsLimit);
+                // Debug.Log("Leaderboard URL: " + leaderboardUrl + "?limit=" + itemsLimit);
             }
             else
             {
                 www = VentiApiRequest.GetApi(leaderboardUrl + "?limit=" + itemsLimit + "&attendeeId=" + attendeeId);
-                Debug.Log("Leaderboard URL: " + leaderboardUrl + "?limit=" + itemsLimit + "&attendeeId=" + attendeeId);
+                // Debug.Log("Leaderboard URL: " + leaderboardUrl + "?limit=" + itemsLimit + "&attendeeId=" + attendeeId);
             }
 
             yield return www.SendAuthenticatedApiRequest();
@@ -79,18 +75,22 @@ namespace Venti.Plugins.Leaderboard
                 yield break;
             }
 
-            Debug.Log("Leaderboard fetched: " + www.downloadHandler.text);
+            // Debug.Log("Leaderboard fetched: " + www.downloadHandler.text);
 
             // parse response
-            JSONObject responseJson = JSON.Parse(www.downloadHandler.text).AsObject;
+            JSONObject responseJson = JSON.Parse(www.downloadHandler.text)["data"].AsObject;
             if (attendeeId != null)
             {
-                JSONObject attendeeData = responseJson["data"]["currentUserData"].AsObject;
-                currentAttendeeRank = attendeeData["rank"].AsInt;
-                Debug.Log("Attendee Rank: " + currentAttendeeRank);
+                JSONObject attendeeData = responseJson["currentUserData"].AsObject;
+                currentAttendee = new LeaderboardItem();
+                currentAttendee.rank = attendeeData["rank"].AsInt;
+                currentAttendee.name = attendeeData["user"]["first_name"].Value;
+                currentAttendee.score = attendeeData["user"]["data"]["score"].AsInt;
+                currentAttendee.sessionId = attendeeData["user"]["id"].Value;
+                currentAttendee.isCurrent = true;
             }
 
-            JSONArray leaderboardData = responseJson["data"]["leaderboardData"].AsArray;
+            JSONArray leaderboardData = responseJson["leaderboardData"].AsArray;
             leaderboardItems.Clear();
 
             for (int i = 0; i < leaderboardData.Count; i++)
@@ -101,22 +101,15 @@ namespace Venti.Plugins.Leaderboard
                 leaderboardItem.name = item["first_name"].Value;
                 leaderboardItem.score = item["data"]["score"].AsInt;
                 leaderboardItem.sessionId = item["id"].Value;
-                if (currentAttendeeRank == i + 1)
+                if (currentAttendee != null && currentAttendee.rank == i + 1)
                     leaderboardItem.isCurrent = true;
 
                 leaderboardItems.Add(leaderboardItem);
             }
 
-            if (attendeeId != null && currentAttendeeRank > itemsLimit)
+            if (currentAttendee != null && currentAttendee.rank > itemsLimit)
             {
-                LeaderboardItem leaderboardItem = new LeaderboardItem();
-                leaderboardItem.rank = currentAttendeeRank;
-                leaderboardItem.name = SessionManager.Instance.session.attendee.firstName;
-                leaderboardItem.score = currentAttendeeScore;
-                leaderboardItem.sessionId = SessionManager.Instance.session.id;
-                leaderboardItem.isCurrent = true;
-
-                leaderboardItems.Add(leaderboardItem);
+                leaderboardItems.Add(currentAttendee);
             }
         }
 
