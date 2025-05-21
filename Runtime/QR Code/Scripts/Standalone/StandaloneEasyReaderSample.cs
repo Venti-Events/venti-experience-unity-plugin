@@ -106,7 +106,7 @@ public class StandaloneEasyReaderSample : MonoBehaviour
                 PlayerPrefs.Save();
 
                 DisableManualInput();
-                // SceneManager.LoadScene(0);
+                SceneManager.LoadScene(0);
             }
         }
     }
@@ -183,7 +183,7 @@ public class StandaloneEasyReaderSample : MonoBehaviour
 
                 DisableManualInput();
 
-                // SceneManager.LoadScene(0);
+                SceneManager.LoadScene(0);
             }
             else
             {

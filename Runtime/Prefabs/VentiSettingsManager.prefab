@@ -823,6 +823,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 54fe5d0b4c4cd1e4e8500db9642ca29d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  <session>k__BackingField:
+    id: 
+    attendee:
+      id: 
+      firstName: 
+      categoryId: 
+      isActive: 0
+      createdAt: 
+      updatedAt: 
   onSessionStart:
     m_PersistentCalls:
       m_Calls:
@@ -843,6 +852,18 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: AttendeeName, Assembly-CSharp
+        m_MethodName: OnSessionEnd
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: ScoreTest, Assembly-CSharp
         m_MethodName: OnSessionEnd
         m_Mode: 1
         m_Arguments:

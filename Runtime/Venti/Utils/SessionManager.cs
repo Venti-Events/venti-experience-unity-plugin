@@ -56,6 +56,14 @@ namespace Venti
             StartCoroutine(EndSessionCoroutine(dataJson.ToString()));
         }
 
+        // public void EndSession(int score, Texture2D photo)
+        // {
+        //     JSONObject dataJson = new JSONObject();
+        //     dataJson["score"] = score;
+
+        //     StartCoroutine(EndSessionCoroutine(dataJson.ToString()));
+        // }
+
         public void ResetSessions()
         {
             StartCoroutine(EndAllSessionsCoroutine());

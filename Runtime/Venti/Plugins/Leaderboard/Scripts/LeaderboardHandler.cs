@@ -23,10 +23,10 @@ namespace Venti.Plugins.Leaderboard
         private const string leaderboardUrl = "/project-attendee-leaderboard/get-by-appkey";
         private const int itemsLimit = 10;
 
-        void Start()
-        {
-            LoadLeaderboard(0);
-        }
+        // void Start()
+        // {
+        //     LoadLeaderboard(0);
+        // }
 
         public void ShowLeaderboard()
         {
