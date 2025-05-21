@@ -4,7 +4,7 @@ using SimpleJSON;
 using PimDeWitte.UnityMainThreadDispatcher;
 using Venti.Theme;
 using Venti.Experience;
-using Venti.Token;
+using UnityEngine.SceneManagement;
 
 namespace Venti
 {
@@ -30,17 +30,42 @@ namespace Venti
             //     Debug.LogError("PlayerPrefs doesn't have appKey saved");
             // }
 
+            SessionManager.Instance?.FetchActiveSession();
+
             // Connect to server socket
-            socket = new SocketConnector(VentiApiRequest.serverUrl, TokenManager.Instance?.appKey);
+            // socket = new SocketConnector(VentiApiRequest.serverUrl, TokenManager.Instance?.appKey);
+            socket = new SocketConnector(VentiApiRequest.serverUrl, TokenManager.Instance?.refreshToken);
         }
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.F5)
-                && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
+            if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
             {
-                Debug.Log("Force fetching hashes from server.");
-                StartCoroutine(GetHashes());
+                if (Input.GetKeyDown(KeyCode.F5))
+                {
+                    Debug.Log("Force fetching hashes from server.");
+                    StartCoroutine(GetHashes());
+                }
+
+                if (Input.GetKeyDown(KeyCode.Delete))
+                {
+                    // Debug.Log("Resetting sessions.");
+                    // SessionManager.Instance?.ResetSessions();
+                    Debug.Log("Ending active session.");
+                    SessionManager.Instance?.EndSession();
+                }
+
+                if (Input.GetKeyDown(KeyCode.R))
+                {
+                    Debug.Log("Reloading scene.");
+                    SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+                }
+
+                if (Input.GetKeyDown(KeyCode.T))
+                {
+                    // Debug.Log("Token: " + TokenManager.Instance?.refreshToken);
+                    Debug.Log(SessionManager.Instance.GetCheckInAppUrl("https://google.com/?foo=bar", "1234567890"));
+                }
             }
         }
 

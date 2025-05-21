@@ -7,6 +7,7 @@ using System.Text;
 using System;
 using TMPro;
 using UnityEngine.SceneManagement;
+using Venti;
 
 public class StandaloneEasyReaderSample : MonoBehaviour
 {

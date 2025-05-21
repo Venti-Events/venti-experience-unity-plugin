@@ -1,10 +1,13 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
+using System.Text.RegularExpressions;
 using SimpleJSON;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Venti.Token
+namespace Venti
 {
     public class TokenManager : Singleton<TokenManager>
     {
@@ -17,8 +20,10 @@ namespace Venti.Token
 
         public const string refreshTokenUrl = "/project-license/get-access-token";
 
-        void Start()
+        protected override void Awake()
         {
+            base.Awake();
+
             if (PlayerPrefs.HasKey("appKey"))
             {
                 appKey = PlayerPrefs.GetString("appKey");
@@ -106,6 +111,53 @@ namespace Venti.Token
             }
         }
 
+        public TokenPayload GetTokenPayload()
+        {
+            // TODO: Use access token instead of refresh token
+            if (refreshToken == null)
+            {
+                Debug.LogError("No refresh token found");
+                return null;
+            }
+
+            // string[] tokenParts = accessToken.Split('.');
+            string[] tokenParts = refreshToken.Split('.');
+            if (tokenParts.Length != 3)
+            {
+                Debug.LogError("Invalid token");
+                return null;
+            }
+
+            Debug.Log("Token parts: " + tokenParts[1]);
+
+            string payloadJsonString = DecodeBase64(tokenParts[1]);
+            if (payloadJsonString == null)
+                return null;
+
+            TokenPayload token = new TokenPayload();
+            token.SetFromJson(JSON.Parse(payloadJsonString).AsObject);
+            return token;
+        }
+
+        private string DecodeBase64(string base64String)
+        {
+            const string base64Pattern = @"^[A-Za-z0-9+/=]*$";
+            if (!Regex.IsMatch(base64String, base64Pattern))
+            {
+                Debug.LogError("Invalid base64 string");
+                return null;
+            }
+
+            if (base64String.Length % 4 != 0)
+            {
+                base64String = base64String.TrimEnd('=');
+                base64String = base64String.PadRight(base64String.Length + 4 - base64String.Length % 4, '=');
+            }
+
+            byte[] base64Bytes = Convert.FromBase64String(base64String);
+            return Encoding.UTF8.GetString(base64Bytes);
+        }
+
         private void SetTokens(string refreshToken, string accessToken)
         {
             this.refreshToken = refreshToken;
@@ -115,11 +167,31 @@ namespace Venti.Token
             PlayerPrefs.SetString("accessToken", accessToken);
             PlayerPrefs.Save();
         }
+    }
 
-        // private class TokenResponse
-        // {
-        //     public string newRefreshToken;
-        //     public string accessToken;
-        // }
+    public class TokenPayload
+    {
+        public string projectId;    // prj_...
+        public string appId;        // app
+        public string tokenId;          // jti
+        public string tokenCount;          // rtc
+        public string issuer;          // iss
+        public string issuedAt;          // iat
+        public string expiresAt;          // exp
+        public string liveAt;          // lva
+        public string mode;          // mod
+
+        public void SetFromJson(JSONObject json)
+        {
+            projectId = json["prj"].Value;
+            appId = json["app"].Value;
+            tokenId = json["jti"].Value;
+            tokenCount = json["rtc"].Value;
+            issuer = json["iss"].Value;
+            issuedAt = json["iat"].Value;
+            expiresAt = json["exp"].Value;
+            liveAt = json["lva"].Value;
+            mode = json["mod"].Value;
+        }
     }
 }
