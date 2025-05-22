@@ -1,6 +1,6 @@
 {
   "name": "com.djil.ventisettings",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "displayName": "Venti Settings Fetch Plugin",
   "description": "Settings plugin to fetch settings from api links",
   "unity": "2022.3",

@@ -21,18 +21,20 @@ namespace Venti.Plugins.Leaderboard
         private const string leaderboardUrl = "/project-attendee-leaderboard/get-by-appkey";
         private const int itemsLimit = 10;
 
-        void OnEnable()
-        {
-            LoadLeaderboard();
-        }
+        // void OnEnable()
+        // {
+        //     LoadLeaderboard();
+        // }
 
         public void ShowLeaderboard()
         {
             leaderboardPanel.gameObject.SetActive(true);
+            leaderboardPanel.GetComponent<CanvasGroup>().alpha = 1f;
         }
 
         public void HideLeaderboard()
         {
+            leaderboardPanel.GetComponent<CanvasGroup>().alpha = 0;
             leaderboardPanel.gameObject.SetActive(false);
         }
 

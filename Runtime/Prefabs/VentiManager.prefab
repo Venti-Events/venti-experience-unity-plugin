@@ -739,7 +739,7 @@ GameObject:
   - component: {fileID: 8637464343043409273}
   - component: {fileID: 5873425500598413851}
   m_Layer: 0
-  m_Name: VentiSettingsManager
+  m_Name: VentiManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -832,13 +832,37 @@ MonoBehaviour:
       isActive: 0
       createdAt: 
       updatedAt: 
-  leaderboard: {fileID: 0}
+  texture: {fileID: 2800000, guid: db05e94fa7f50a94ba0cd9e5638d8933, type: 3}
   onSessionStart:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: AttendeeName, RuntimeSettings
+        m_MethodName: OnSessionStart
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   onSessionEnd:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: AttendeeName, RuntimeSettings
+        m_MethodName: OnSessionEnd
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &8295223825922678252
 GameObject:
   m_ObjectHideFlags: 0

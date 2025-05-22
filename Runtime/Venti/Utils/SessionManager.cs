@@ -14,6 +14,7 @@ namespace Venti
         [field: SerializeField] public Session session { get; private set; } = new Session();
 
         // public LeaderboardHandler leaderboard;
+
         public UnityEvent<Session> onSessionStart;
         public UnityEvent onSessionEnd;
 
@@ -21,6 +22,8 @@ namespace Venti
         // public string sessionId { get; private set; }
         // public string attendeeId {get; private set; }
         // public Attendee attendee { get; private set; }
+
+        private bool allowNewSession = true;
 
         private const string checkInAppUrl = @"https://venti-checkin.web.app";
         // private const string getSessionUrl = @"/app-sessions";
@@ -36,6 +39,9 @@ namespace Venti
 
         public void FetchSessionAttendee(string jsonString)
         {
+            if (!allowNewSession)
+                return;
+
             JSONObject sessionAttendeeJson = JSON.Parse(jsonString).AsObject;
             session.id = sessionAttendeeJson["sessionId"].Value;
             string attendeeId = sessionAttendeeJson["attendeeId"].Value;
@@ -46,26 +52,27 @@ namespace Venti
             StartCoroutine(FetchAttendeeCoroutine(attendeeId));
         }
 
+        public void SetAllowNewSession(bool allow)
+        {
+            allowNewSession = allow;
+        }
+
         public void EndSession()
         {
-            StartCoroutine(EndSessionCoroutine("{}"));
+            // Prematurely end session
+            StartCoroutine(EndSessionCoroutine(-1));
         }
 
         public void EndSession(int score)
         {
-            JSONObject dataJson = new JSONObject();
-            dataJson["score"] = score;
-
-            StartCoroutine(EndSessionCoroutine(dataJson.ToString()));
+            StartCoroutine(EndSessionCoroutine(score));
         }
 
         // public void EndSession(int score, Texture2D photo)
-        // {
-        //     JSONObject dataJson = new JSONObject();
-        //     dataJson["score"] = score;
-
-        //     StartCoroutine(EndSessionCoroutine(dataJson.ToString()));
-        // }
+        public void EndSession(int score, Texture2D image)
+        {
+            StartCoroutine(EndSessionCoroutine(score, image));
+        }
 
         public void ResetSessions()
         {
@@ -206,12 +213,13 @@ namespace Venti
                     JSONObject attendeeJson = JSON.Parse(www.downloadHandler.text).AsObject;
                     session.attendee.SetFromJson(attendeeJson["data"].AsObject);
 
+                    allowNewSession = false;
                     onSessionStart.Invoke(session);
                 }
             }
         }
 
-        private IEnumerator EndSessionCoroutine(string dataJsonStr)
+        private IEnumerator EndSessionCoroutine(int score, Texture2D image = null)
         {
             if (session.id == null)
             {
@@ -220,9 +228,28 @@ namespace Venti
             }
 
             Debug.Log("Ending session: " + session.id);
-            Debug.Log("Data JSON: " + dataJsonStr);
 
-            using (VentiApiRequest www = VentiApiRequest.PutApi($"{endSessionUrl}/{session.id}", dataJsonStr, "application/json"))
+            // JSONObject dataJson = new JSONObject();
+            // dataJson["score"] = score;
+            // Debug.Log("Data JSON: " + dataJsonStr);
+
+            string endpoint = $"{endSessionUrl}/{session.id}";
+
+            WWWForm form = new WWWForm();
+            if (score >= 0)
+                form.AddField("score", score);
+
+            if (image != null)
+            {
+                endpoint = $"{endSessionUrl}/image/{session.id}";
+
+                // Convert texture to byte[]
+                byte[] textureBytes = image.EncodeToJPG();
+                Debug.Log("Texture bytes: " + textureBytes.Length);
+                form.AddBinaryData("file", textureBytes, "image.jpg", "image/jpeg");
+            }
+
+            using (VentiApiRequest www = VentiApiRequest.PostApi(endpoint, form))
             {
                 yield return www.SendAuthenticatedApiRequest();
 
