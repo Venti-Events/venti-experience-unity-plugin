@@ -4,7 +4,6 @@ using System.Web;
 using SimpleJSON;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Networking;
 
 namespace Venti
 {
@@ -33,6 +32,9 @@ namespace Venti
 
         public void FetchActiveSession()
         {
+            if (!allowNewSession)
+                return;
+
             StartCoroutine(FetchActiveSessionCoroutine());
         }
 
@@ -219,29 +221,29 @@ namespace Venti
             }
         }
 
-        public Texture2D TestImage;
-        private IEnumerator TestCoroutine(int score)
-        {
-            WWWForm form = new WWWForm();
-            form.AddField("score", score);
+        // public Texture2D TestImage;
+        // private IEnumerator TestCoroutine(int score)
+        // {
+        //     WWWForm form = new WWWForm();
+        //     form.AddField("score", score);
 
-            // Convert texture to byte[]
-            byte[] textureBytes = TestImage.EncodeToJPG();
-            Debug.Log("Texture bytes: " + textureBytes.Length);
-            form.AddBinaryData("file", textureBytes, "image.jpg", "image/jpeg");
+        //     // Convert texture to byte[]
+        //     byte[] textureBytes = TestImage.EncodeToJPG();
+        //     Debug.Log("Texture bytes: " + textureBytes.Length);
+        //     form.AddBinaryData("file", textureBytes, "image.jpg", "image/jpeg");
 
-            using (UnityWebRequest www = UnityWebRequest.Post("localhost:8008/profile", form))
-            {
-                yield return www.SendWebRequest();
+        //     using (UnityWebRequest www = UnityWebRequest.Post("localhost:8008/profile", form))
+        //     {
+        //         yield return www.SendWebRequest();
 
-                if (www.result != VentiApiRequest.Result.Success)
-                    Debug.LogError("Error ending test session: " + www.error);
-                else
-                {
-                    Debug.Log("Test Session ended: " + www.downloadHandler.text);
-                }
-            }
-        }
+        //         if (www.result != VentiApiRequest.Result.Success)
+        //             Debug.LogError("Error ending test session: " + www.error);
+        //         else
+        //         {
+        //             Debug.Log("Test Session ended: " + www.downloadHandler.text);
+        //         }
+        //     }
+        // }
 
         private IEnumerator EndSessionCoroutine(int score, Texture2D image = null)
         {
@@ -253,27 +255,14 @@ namespace Venti
 
             Debug.Log("Ending session: " + session.id);
 
-            // JSONObject dataJson = new JSONObject();
-            // dataJson["score"] = score;
-            // Debug.Log("Data JSON: " + dataJsonStr);
-
-            string endpoint = $"{endSessionUrl}/{session.id}";
-
-            WWWForm form = new WWWForm();
-            if (score >= 0)
-                form.AddField("score", score);
-
             if (image != null)
-            {
-                endpoint = $"{endSessionUrl}/image/{session.id}";
+                yield return UploadSessionImageCoroutine(image);
 
-                // Convert texture to byte[]
-                byte[] textureBytes = image.EncodeToJPG();
-                Debug.Log("Texture bytes: " + textureBytes.Length);
-                form.AddBinaryData("file", textureBytes, "image.jpg", "image/jpeg");
-            }
+            JSONObject dataJson = new JSONObject();
+            if (score >= 0)
+                dataJson["score"] = score;
 
-            using (VentiApiRequest www = VentiApiRequest.PostApi(endpoint, form))
+            using (VentiApiRequest www = VentiApiRequest.PostApi($"{endSessionUrl}/{session.id}", dataJson.ToString(), "application/json"))
             {
                 yield return www.SendAuthenticatedApiRequest();
 
@@ -288,6 +277,38 @@ namespace Venti
 
                     FetchActiveSession();
                 }
+            }
+        }
+
+        private IEnumerator UploadSessionImageCoroutine(Texture2D image)
+        {
+            if (session.id == null)
+            {
+                Debug.LogError("No session ID found.");
+                yield break;
+            }
+
+            if (image == null)
+            {
+                Debug.LogError("No image to upload found.");
+                yield break;
+            }
+
+            // Convert texture to byte[]
+            byte[] textureBytes = image.EncodeToJPG();
+            Debug.Log("Texture bytes: " + textureBytes.Length);
+
+            WWWForm form = new WWWForm();
+            form.AddBinaryData("file", textureBytes, "image.jpg", "image/jpeg");
+
+            using (VentiApiRequest www = VentiApiRequest.PostApi($"{endSessionUrl}/image/{session.id}", form))
+            {
+                yield return www.SendAuthenticatedApiRequest();
+
+                if (www.result != VentiApiRequest.Result.Success)
+                    Debug.LogError("Error uploading image: " + www.error);
+                else
+                    Debug.Log("Image uploaded: " + www.downloadHandler.text);
             }
         }
 

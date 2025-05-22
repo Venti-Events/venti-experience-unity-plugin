@@ -17,7 +17,7 @@ namespace Venti
         private SocketConnector socket;
         public const string getAppAndThemeHashesUrl = @"/experience-app/get-experience-app-configuration-hash";
 
-        void Start()
+        void OnEnable()
         {
             // if (PlayerPrefs.HasKey("appKey"))
             // {
@@ -106,6 +106,12 @@ namespace Venti
             }
         }
         #endregion
+
+        void OnDisable()
+        {
+            if (socket != null)
+                socket.Dispose();
+        }
 
         void OnApplicationQuit()
         {

@@ -121,11 +121,6 @@ namespace Venti
             }
         }
 
-        void OnApplicationQuit()
-        {
-            Disconnect();
-        }
-
         public void Dispose()
         {
             Disconnect();

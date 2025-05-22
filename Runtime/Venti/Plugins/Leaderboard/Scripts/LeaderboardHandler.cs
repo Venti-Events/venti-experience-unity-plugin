@@ -27,14 +27,14 @@ namespace Venti.Plugins.Leaderboard
 
         public void ShowLeaderboard()
         {
-            leaderboardPanel.gameObject.SetActive(true);
+            // leaderboardPanel.gameObject.SetActive(true);
             leaderboardPanel.GetComponent<CanvasGroup>().alpha = 1f;
         }
 
         public void HideLeaderboard()
         {
             leaderboardPanel.GetComponent<CanvasGroup>().alpha = 0;
-            leaderboardPanel.gameObject.SetActive(false);
+            // leaderboardPanel.gameObject.SetActive(false);
         }
 
         public void LoadLeaderboard()

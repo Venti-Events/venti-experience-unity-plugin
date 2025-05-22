@@ -13,6 +13,8 @@ public class ScoreTest : MonoBehaviour
 
     private int score = 0;
 
+    public Texture2D texture;
+
     public void SubmitScore()
     {
         string scoreString = inputField.text;
@@ -24,7 +26,8 @@ public class ScoreTest : MonoBehaviour
 
         int score = int.Parse(scoreString);
 
-        SessionManager.Instance.EndSession(score);
+        // SessionManager.Instance.EndSession(score);
+        SessionManager.Instance.EndSession(score, texture);
         this.score = score;
     }
 
