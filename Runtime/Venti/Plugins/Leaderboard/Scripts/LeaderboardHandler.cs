@@ -37,7 +37,12 @@ namespace Venti.Plugins.Leaderboard
             leaderboardPanel.gameObject.SetActive(false);
         }
 
-        public void LoadLeaderboard(string currentAttendeeId = null)
+        public void LoadLeaderboard()
+        {
+            StartCoroutine(LoadLeaderboardCoroutine());
+        }
+
+        public void LoadLeaderboard(string currentAttendeeId)
         {
             StartCoroutine(LoadLeaderboardCoroutine(currentAttendeeId));
         }
@@ -53,7 +58,9 @@ namespace Venti.Plugins.Leaderboard
 
         private IEnumerator FetchLeaderboardCoroutine(string currentAttendeeId = null)
         {
-            string attendeeId = currentAttendeeId ?? SessionManager.Instance?.session?.attendee?.id;
+            string attendeeId = currentAttendeeId;
+            if (string.IsNullOrEmpty(currentAttendeeId))
+                attendeeId = SessionManager.Instance?.session?.attendee?.id;
 
             VentiApiRequest www;
             if (attendeeId == null)
