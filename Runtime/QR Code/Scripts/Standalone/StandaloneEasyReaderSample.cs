@@ -1,9 +1,7 @@
 ﻿using UnityEngine;
-using UnityEngine.Networking;
 using UnityEngine.UI;
 using ZXing;
 using System.Collections;
-using System.Text;
 using System;
 using TMPro;
 using UnityEngine.SceneManagement;

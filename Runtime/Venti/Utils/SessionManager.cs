@@ -4,8 +4,6 @@ using System.Web;
 using SimpleJSON;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Networking;
-using Venti.Plugins.Leaderboard;
 
 namespace Venti
 {
