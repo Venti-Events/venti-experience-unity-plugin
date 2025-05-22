@@ -4,6 +4,7 @@ using System.Web;
 using SimpleJSON;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Networking;
 
 namespace Venti
 {
@@ -64,6 +65,7 @@ namespace Venti
         public void EndSession(int score)
         {
             StartCoroutine(EndSessionCoroutine(score));
+            // StartCoroutine(TestCoroutine(score));
         }
 
         // public void EndSession(int score, Texture2D photo)
@@ -213,6 +215,30 @@ namespace Venti
 
                     allowNewSession = false;
                     onSessionStart.Invoke(session);
+                }
+            }
+        }
+
+        public Texture2D TestImage;
+        private IEnumerator TestCoroutine(int score)
+        {
+            WWWForm form = new WWWForm();
+            form.AddField("score", score);
+
+            // Convert texture to byte[]
+            byte[] textureBytes = TestImage.EncodeToJPG();
+            Debug.Log("Texture bytes: " + textureBytes.Length);
+            form.AddBinaryData("file", textureBytes, "image.jpg", "image/jpeg");
+
+            using (UnityWebRequest www = UnityWebRequest.Post("localhost:8008/profile", form))
+            {
+                yield return www.SendWebRequest();
+
+                if (www.result != VentiApiRequest.Result.Success)
+                    Debug.LogError("Error ending test session: " + www.error);
+                else
+                {
+                    Debug.Log("Test Session ended: " + www.downloadHandler.text);
                 }
             }
         }
