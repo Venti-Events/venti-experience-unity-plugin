@@ -40,6 +40,18 @@ namespace Venti
             {
                 refreshToken = PlayerPrefs.GetString("refreshToken");
                 Debug.Log($"Loaded saved refreshToken: {refreshToken}");
+
+                if (PlayerPrefs.HasKey("accessToken"))
+                {
+                    accessToken = PlayerPrefs.GetString("accessToken");
+                    Debug.Log($"Loaded saved accessToken: {accessToken}");
+                }
+                else
+                {
+                    Debug.LogError("PlayerPrefs doesn't have accessToken saved");
+                    RefreshToken();
+                    return;
+                }
             }
             else
             {
@@ -47,17 +59,23 @@ namespace Venti
                 RefreshToken();
                 return;
             }
+        }
 
-            if (PlayerPrefs.HasKey("accessToken"))
+        private void Update()
+        {
+            if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
             {
-                accessToken = PlayerPrefs.GetString("accessToken");
-                Debug.Log($"Loaded saved accessToken: {accessToken}");
-            }
-            else
-            {
-                Debug.LogError("PlayerPrefs doesn't have accessToken saved");
-                RefreshToken();
-                return;
+                if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                {
+                    if (Input.GetKeyDown(KeyCode.Backspace))
+                    {
+                        PlayerPrefs.DeleteKey("appKey");
+                        PlayerPrefs.DeleteKey("refreshToken");
+                        PlayerPrefs.DeleteKey("accessToken");
+                        PlayerPrefs.Save();
+                        SceneManager.LoadScene(appKeyScanScene);
+                    }
+                }
             }
         }
 

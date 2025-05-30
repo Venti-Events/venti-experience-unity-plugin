@@ -55,11 +55,11 @@ namespace Venti
                     SessionManager.Instance?.EndSession();
                 }
 
-                if (Input.GetKeyDown(KeyCode.R))
-                {
-                    Debug.Log("Reloading scene.");
-                    SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-                }
+                //if (Input.GetKeyDown(KeyCode.R))
+                //{
+                //    Debug.Log("Reloading scene.");
+                //    SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+                //}
 
                 if (Input.GetKeyDown(KeyCode.T))
                 {
