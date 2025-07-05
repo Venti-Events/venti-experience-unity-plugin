@@ -1,7 +1,7 @@
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 using SimpleJSON;
-using System;
 
 namespace Venti.Experience
 {
@@ -9,8 +9,8 @@ namespace Venti.Experience
     public class ColorField : BaseField
     {
         //[Header("Configurations")]
-        [Header("Values")]
-        public Color @default;
+        //public Color @default;
+        [field: Header("Values")]
         [field: SerializeField][field: ReadOnly] public Color value { get; private set; }
         [field: SerializeField][field: ReadOnly] public string valueRaw { get; private set; }
 
@@ -20,32 +20,61 @@ namespace Venti.Experience
 
         public ColorField()
         {
-            type = FieldType.Color;
+            type = FieldType.color;
         }
 
         public override JSONObject GetJson()
         {
             JSONObject json = base.GetJson();
-            json["default"] = "#" + ColorUtility.ToHtmlStringRGBA(@default);
+            //json["default"] = "#" + ColorUtility.ToHtmlStringRGBA(@default);
 
             return json;
         }
 
-        public override bool SetFromJson(JSONObject json)
+        //public override bool SetFromJson(JSONObject json)
+        //{
+        //    if (!base.SetFromJson(json))
+        //        return false;
+
+        //    if (json["value"] == null)
+        //    {
+        //        //valueRaw = "#" + ColorUtility.ToHtmlStringRGBA(@default);
+        //        Debug.LogWarning("value is null in JSON for " + id);
+        //    }
+        //    else
+        //        valueRaw = json["value"].Value;
+
+        //    // Convert hex string to Color
+        //    if (UnityEngine.ColorUtility.TryParseHtmlString(valueRaw, out Color color))
+        //        value = color;
+        //    else
+        //        throw new Exception("Invalid color format in JSON for " + id);
+
+        //    onChange.Invoke(value);
+        //    onChangeWithId.Invoke(id, value);
+
+        //    return true;
+        //}
+
+        public override bool SetFromJson(string[] stack, JSONObject hashes, JSONObject values)
         {
-            if (!base.SetFromJson(json))
+            if (!base.SetFromJson(stack, hashes, values))
                 return false;
 
-            if (json["value"] == null)
+            string path = GetPath(stack);
+            JSONNode _value = values[path];
+            if (_value == null)
             {
-                valueRaw = "#" + ColorUtility.ToHtmlStringRGBA(@default);
-                Debug.LogWarning("value is null in JSON for " + id);
+                Debug.LogWarning("Value is null for field: " + _name + " (" + id + ")");
+                return false;
             }
-            else
-                valueRaw = json["value"].Value;
-                
+            if (!_value.IsString)
+                throw new Exception("Value is not a string for field: " + _name + " (" + id + ")");
+
+            valueRaw = _value.Value;
+
             // Convert hex string to Color
-            if (UnityEngine.ColorUtility.TryParseHtmlString(valueRaw, out Color color))
+            if (ColorUtility.TryParseHtmlString(valueRaw, out Color color))
                 value = color;
             else
                 throw new Exception("Invalid color format in JSON for " + id);

@@ -15,7 +15,8 @@ namespace Venti.Theme
         {
             TMP_Text text = GetComponent<TMP_Text>();
             text.font = ThemeManager.Instance.theme.typography.headingFont.fontAsset;
-            text.color = ThemeManager.Instance.theme.typography.typeScales.heading.colorValue;
+            //text.color = ThemeManager.Instance.theme.typography.typeScales.heading.colorValue;
+            text.color = ThemeManager.Instance.theme.themeColors.primaryColorValue;
             text.ForceMeshUpdate();
         }
     }

@@ -8,12 +8,12 @@ namespace Venti.Theme
     public class Theme
     {
         public Header header;
-        public Footer footer;
+        /*public Footer footer;*/
         public ThemeColor themeColors;
         public Typography typography;
         public ThemeButton buttons;
-        public Surface surfaces;
-        public Background background;
+        /*public Surface surfaces;
+        public Background background;*/
         [SerializeField][ReadOnly] private string hash;
 
         // private Action<string> valueLoadStartEvent;
@@ -31,12 +31,12 @@ namespace Venti.Theme
                 return false;
 
             header.SetFromJson(json["header"].AsObject);
-            footer.SetFromJson(json["footer"].AsObject);
+            /*footer.SetFromJson(json["footer"].AsObject);*/
             themeColors.SetFromJson(json["themeColors"].AsObject);
             typography.SetFromJson(json["typography"].AsObject);
             buttons.SetFromJson(json["buttons"].AsObject);
-            surfaces.SetFromJson(json["surfaces"].AsObject);
-            background.SetFromJson(json["background"].AsObject);
+            /*surfaces.SetFromJson(json["surfaces"].AsObject);
+            background.SetFromJson(json["background"].AsObject);*/
             hash = json["hash"];
 
             return true;
@@ -61,7 +61,7 @@ namespace Venti.Theme
         [Serializable]
         public class Header
         {
-            public ThemeImage companyLogo;
+            /*public ThemeImage companyLogo;*/
             public ThemeImage eventLogo;
             [SerializeField][ReadOnly] private string hash;
 
@@ -76,7 +76,7 @@ namespace Venti.Theme
                 if (json["hash"] == hash)
                     return false;
 
-                companyLogo.SetFromJson(json["companyLogo"].AsObject);
+                /*companyLogo.SetFromJson(json["companyLogo"].AsObject);*/
                 eventLogo.SetFromJson(json["eventLogo"].AsObject);
                 hash = json["hash"];
 
@@ -89,8 +89,8 @@ namespace Venti.Theme
         {
             public string imageUrl;
             public Texture2D image;
-            public Size size;
-            public Alignment alignment;
+            /*public Size size;
+            public Alignment alignment;*/
 
             public bool SetFromJson(JSONObject json)
             {
@@ -101,8 +101,8 @@ namespace Venti.Theme
                 }
 
                 //size = (Size)Enum.Parse(typeof(Size), json["size"].Value);
-                Enum.TryParse<Size>(json["size"].Value, true, out size);
-                Enum.TryParse<Alignment>(json["alignment"].Value, true, out alignment);
+                /*Enum.TryParse<Size>(json["size"].Value, true, out size);
+                Enum.TryParse<Alignment>(json["alignment"].Value, true, out alignment);*/
                 imageUrl = json["imageUrl"];
 
                 ThemeManager.Instance?.OnAssetLoadStart(imageUrl);
@@ -178,8 +178,8 @@ namespace Venti.Theme
         public class Typography
         {
             public ThemeFont headingFont;
-            public ThemeFont bodyFont;
-            public TypeScale typeScales;
+            /*public ThemeFont bodyFont;
+            public TypeScale typeScales;*/
             [SerializeField][ReadOnly] private string hash;
 
             public bool SetFromJson(JSONObject json)
@@ -196,8 +196,8 @@ namespace Venti.Theme
                 //companyLogo.SetFromJson(json["companyLogo"].AsObject);
                 //eventLogo.SetFromJson(json["eventLogo"].AsObject);
                 headingFont.SetFromJson(json["headingFont"].AsObject, "regular");
-                bodyFont.SetFromJson(json["bodyFont"].AsObject, "regular");
-                typeScales.SetFromJson(json["typeScales"].AsObject);
+                /*bodyFont.SetFromJson(json["bodyFont"].AsObject, "regular");
+                typeScales.SetFromJson(json["typeScales"].AsObject);*/
                 hash = json["hash"];
 
                 return true;
@@ -206,10 +206,10 @@ namespace Venti.Theme
             [Serializable]
             public class ThemeFont
             {
-                public FontType type;
+                /*public FontType type;
                 public string family;
+                public float sizeAdjustment;    //???*/
                 public FontVariant variants;
-                public float sizeAdjustment;    //???
                 public TMPro.TMP_FontAsset fontAsset;
 
                 public bool SetFromJson(JSONObject json, string variantPreference)
@@ -221,9 +221,9 @@ namespace Venti.Theme
                     }
 
                     //type = (FontType)Enum.Parse(typeof(FontType), json["type"].Value);
-                    Enum.TryParse<FontType>(json["type"].Value, true, out type);
+                    /*Enum.TryParse<FontType>(json["type"].Value, true, out type);
                     family = json["family"];
-                    sizeAdjustment = json["sizeAdjustment"].AsFloat;
+                    sizeAdjustment = json["sizeAdjustment"].AsFloat;*/
                     variants.SetFromJson(json["variants"].AsObject);
 
                     string newFontUrl = json["variants"][variantPreference];
@@ -345,7 +345,7 @@ namespace Venti.Theme
     public class ThemeButton
     {
         public ButtonStruct primary;
-        public ButtonStruct secondary;
+        /*public ButtonStruct secondary;*/
         [SerializeField][ReadOnly] private string hash;
 
         public bool SetFromJson(JSONObject json)
@@ -360,7 +360,7 @@ namespace Venti.Theme
                 return false;
 
             primary.SetFromJson(json["primary"].AsObject);
-            secondary.SetFromJson(json["secondary"].AsObject);
+            /*secondary.SetFromJson(json["secondary"].AsObject);*/
             hash = json["hash"];
 
             return true;

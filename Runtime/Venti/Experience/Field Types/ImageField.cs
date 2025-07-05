@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 using SimpleJSON;
+using System;
 
 namespace Venti.Experience
 {
@@ -8,8 +9,10 @@ namespace Venti.Experience
     public class ImageField : BaseField
     {
         //[Header("Configurations")]
-        [Header("Values")]
-        public string @default;     // url to image
+        //public FileDisplay display;
+
+        [field: Header("Values")]
+        //public string @default;     // url to image
         [field: SerializeField][field: ReadOnly] public Texture2D value { get; private set; }
         [field: SerializeField][field: ReadOnly] public string valueRaw { get; private set; }   // url to image
 
@@ -17,32 +20,69 @@ namespace Venti.Experience
         [field: SerializeField] public UnityEvent<Texture2D> onChange { get; private set; }    // send value
         [field: SerializeField] public UnityEvent<string, Texture2D> onChangeWithId { get; private set; }  // send id and value
 
+        private FileDisplay display = FileDisplay.image;
+
         public ImageField()
         {
-            type = FieldType.Image;
+            type = FieldType.file;
         }
 
         public override JSONObject GetJson()
         {
             JSONObject json = base.GetJson();
-            json["default"] = @default;
+            //json["default"] = @default;
+            json["display"] = display.ToString();
 
             return json;
         }
 
-        public override bool SetFromJson(JSONObject json)
+        //public override bool SetFromJson(JSONObject json)
+        //{
+        //    if (!base.SetFromJson(json))
+        //        return false;
+
+        //    // string newValue;
+        //    if (json["value"] == null)
+        //    {
+        //        //valueRaw = @default;
+        //        Debug.LogWarning("value is null in JSON for " + id);
+        //    }
+        //    else
+        //        valueRaw = json["value"].Value;
+
+        //    base.OnAsyncValueLoadStart(id);
+        //    CacheManager.Instance.GetAsset(valueRaw, CachedAssetType.Image, (texture) =>
+        //    {
+        //        if (texture != null)
+        //        {
+        //            value = texture as Texture2D;
+
+        //            onChange?.Invoke(value);
+        //            onChangeWithId?.Invoke(id, value);
+        //        }
+
+        //        base.OnAsyncValueLoadEnd(id);
+        //    });
+
+        //    return true;
+        //}
+
+        public override bool SetFromJson(string[] stack, JSONObject hashes, JSONObject values)
         {
-            if (!base.SetFromJson(json))
+            if (!base.SetFromJson(stack, hashes, values))
                 return false;
 
-            // string newValue;
-            if (json["value"] == null)
+            string path = GetPath(stack);
+            JSONNode _value = values[path];
+            if (_value == null)
             {
-                valueRaw = @default;
-                Debug.LogWarning("value is null in JSON for " + id);
+                Debug.LogWarning("Value is null for field: " + _name + " (" + id + ")");
+                return false;
             }
-            else
-                valueRaw = json["value"].Value;
+            if (!_value.IsString)
+                throw new Exception("Value is not a string for field: " + _name + " (" + id + ")");
+
+            valueRaw = _value.Value;
 
             base.OnAsyncValueLoadStart(id);
             CacheManager.Instance.GetAsset(valueRaw, CachedAssetType.Image, (texture) =>
@@ -60,5 +100,15 @@ namespace Venti.Experience
 
             return true;
         }
+    }
+
+    public enum FileDisplay
+    {
+        image,
+        //audio,
+        //video,
+        //pdf,
+        //font,
+        //other
     }
 }

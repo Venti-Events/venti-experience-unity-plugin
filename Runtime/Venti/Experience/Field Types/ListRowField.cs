@@ -18,7 +18,7 @@ namespace Venti.Experience
 
         public ListRowField()
         {
-            type = FieldType.ListRow;
+            type = FieldType.listRow;
             GenerateRandomId();
         }
 
@@ -36,7 +36,7 @@ namespace Venti.Experience
                 field.SetAsyncLoadEvents(hash, OnFieldLoadStart, OnFieldLoadEnd);
         }
 
-        public override void ClearFields()
+        public override void Clear()
         {
             Utils.ClearChildFields(value);
             value = null;
@@ -83,36 +83,69 @@ namespace Venti.Experience
             return json;
         }
 
-        public override bool SetFromJson(JSONObject json)
+        //public override bool SetFromJson(JSONObject json)
+        //{
+        //    // Set id so BaseField does not trigger a mismatch exception
+        //    // since we copy id from header
+        //    id = json["id"];
+
+        //    // Check whether hash has changed or not and update it
+        //    if (!base.SetFromJson(json))
+        //        return false;
+
+        //    if (json["value"] == null)
+        //    {
+        //        value = new BaseField[0];
+        //        Debug.LogWarning("Row value is null in JSON for " + id);
+        //        return false;
+        //    }
+
+        //    JSONArray valueJson = json["value"].AsArray;
+        //    if (valueJson == null)
+        //        throw new Exception("Row has no values for " + id);
+        //    if (valueJson.Count != value.Length)
+        //        throw new Exception("Fields length for row do not match: " + id);
+
+        //    // Clear pending field
+        //    pendingLoadFieldIds.Clear();
+        //    // Inform parent that async value load has started
+        //    base.OnAsyncValueLoadStart(id);
+
+        //    for (int i = 0; i < value.Length; i++)
+        //        value[i].SetFromJson(valueJson[i].AsObject);
+
+        //    // There were no async values to load
+        //    if (pendingLoadFieldIds.Count == 0)
+        //    {
+        //        onChange?.Invoke(value);
+        //        onChangeWithId?.Invoke(id, value);
+
+        //        // Inform parent that all async value have been loaded
+        //        base.OnAsyncValueLoadEnd(id);
+        //    }
+
+        //    return true;
+        //}
+
+        public override bool SetFromJson(string[] stack, JSONObject hashes, JSONObject values)
         {
-            // Set id so BaseField does not trigger a mismatch exception
-            // since we copy id from header
-            id = json["id"];
+            //if (!base.SetFromJson(stack, hashes, values))
+            //    return false;
 
-            // Check whether hash has changed or not and update it
-            if (!base.SetFromJson(json))
-                return false;
-
-            if (json["value"] == null)
+            if (values == null)
             {
                 value = new BaseField[0];
                 Debug.LogWarning("Row value is null in JSON for " + id);
                 return false;
             }
 
-            JSONArray valueJson = json["value"].AsArray;
-            if (valueJson == null)
-                throw new Exception("Row has no values for " + id);
-            if (valueJson.Count != value.Length)
-                throw new Exception("Fields length for row do not match: " + id);
-
             // Clear pending field
             pendingLoadFieldIds.Clear();
             // Inform parent that async value load has started
             base.OnAsyncValueLoadStart(id);
 
-            for (int i = 0; i < value.Length; i++)
-                value[i].SetFromJson(valueJson[i].AsObject);
+            foreach (var field in value)
+                field.SetFromJson(stack, hashes, values);
 
             // There were no async values to load
             if (pendingLoadFieldIds.Count == 0)

@@ -8,21 +8,21 @@ namespace Venti.Experience
     {
         [Header("Experience Info")]
         public string experienceId;
-        public string name;
-        public string description;
-        public string icon;
+        //public string name;
+        //public string description;
+        //public string icon;
         public SemVer version;
-        public string publisher;
-        public string[] tags;
+        //public string publisher;
+        //public string[] tags;
 
-        [Header("Experience Profile Page")]
-        public string coverImageDesktop;
-        public string coverImageMobile;
-        public string[] screenshots;
-        public string showReelVideo;
+        //[Header("Experience Profile Page")]
+        //public string coverImageDesktop;
+        //public string coverImageMobile;
+        //public string[] screenshots;
+        //public string showReelVideo;
 
-        [Header("Builds Info")]
-        public BuildInfo[] builds;
+        //[Header("Builds Info")]
+        //public BuildInfo[] builds;
 
         [field: NonSerialized][field: ReadOnly] public string hash {  get; private set; }
 

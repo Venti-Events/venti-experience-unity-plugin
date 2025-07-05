@@ -11,7 +11,11 @@ namespace Venti.Experience
     public class ExperienceManager : Singleton<ExperienceManager>
     {
         [field: SerializeField] public Metadata metaData { get; private set; }
-        [field: SerializeField] public BaseField[] fields { get; private set; }
+        //[field: SerializeField] public BaseField[] fields { get; private set; }
+
+        //[field: SerializeField] public NestedPage screenPages { get; private set; }
+        //[field: SerializeField] public FieldsPage settingsPage { get; private set; }
+        [field: SerializeField] public BasePage[] pages { get; private set; }
 
         // Settings
         [Tooltip("Enabling this will include inactive GameObjects in search")]
@@ -24,7 +28,8 @@ namespace Venti.Experience
         // Path Constants
         // public const string appFolderName = "cache";
         private const string configFileName = "app-config";
-        private const string getAppConfigUrl = @"/experience-app/get-experience-app-configuration";
+        //private const string getAppConfigUrl = @"/experience-app/get-experience-app-configuration";
+        private const string getAppConfigUrl = @"/projects/apps/config";
 
         // Private Variables
         private string appHash;
@@ -57,39 +62,75 @@ namespace Venti.Experience
 
         public void FetchChildFields()
         {
-            fields = Utils.FetchChildFields<BaseField>(gameObject, searchForInactive);
+            //fields = Utils.FetchChildFields<BaseField>(gameObject, searchForInactive);
 
-            foreach (var field in fields)
-                field.SetAsyncLoadEvents(appHash, OnFieldLoadStart, OnFieldLoadEnd);
+            //foreach (var field in fields)
+            //    field.SetAsyncLoadEvents(appHash, OnFieldLoadStart, OnFieldLoadEnd);
+
+            pages = Utils.FetchChildPages(gameObject, searchForInactive);
+
+            foreach (var page in pages)
+                page.SetAsyncLoadEvents(appHash, OnFieldLoadStart, OnFieldLoadEnd);
         }
 
         public void ClearFields()
         {
-            Utils.ClearChildFields(fields);
-            fields = null;
+            //Utils.ClearChildFields(fields);
+            //fields = null;
+
+            Utils.ClearChildPages(pages);
+            pages = null;
         }
 
         public JSONObject GetJson()
         {
-            string metadataJsonString = JsonConvert.SerializeObject(metaData, Formatting.Indented);
-            Debug.Log(metadataJsonString);
+            //string metadataJsonString = JsonConvert.SerializeObject(metaData, Formatting.Indented);
+            //Debug.Log(metadataJsonString);
 
-            JSONObject metadataJson = JSON.Parse(metadataJsonString).AsObject;
+            //JSONObject metadataJson = JSON.Parse(metadataJsonString).AsObject;
 
-            JSONArray fieldsJson = new JSONArray();
-            for (int i = 0; i < fields.Length; i++)
+            //JSONArray fieldsJson = new JSONArray();
+            //for (int i = 0; i < fields.Length; i++)
+            //{
+            //    BaseField field = fields[i];
+            //    JSONObject fieldJson = field.GetJson();
+            //    fieldsJson.Add(fieldJson);
+            //}
+            //Debug.Log(fieldsJson.ToString(2));
+
+            //JSONObject experienceJson = new JSONObject();
+            //experienceJson["metadata"] = metadataJson;
+            //experienceJson["fields"] = fieldsJson;
+            //return experienceJson;
+
+            JSONArray menuJson = new JSONArray();
+            JSONObject pagesJson = new JSONObject();
+            for (int i = 0; i < pages.Length; i++)
             {
-                BaseField field = fields[i];
-                JSONObject fieldJson = field.GetJson();
-                fieldsJson.Add(fieldJson);
+                menuJson.Add(pages[i].GetMenuJson());
+
+                JSONObject subPageJson = pages[i].GetPagesJson();
+                foreach (var pageId in subPageJson.Keys)
+                {
+                    pagesJson[pageId] = subPageJson[pageId];
+                }
+                //pagesJson.Add(pages[i].GetPagesJson());
             }
-            Debug.Log(fieldsJson.ToString(2));
 
             JSONObject experienceJson = new JSONObject();
-            experienceJson["metadata"] = metadataJson;
-            experienceJson["fields"] = fieldsJson;
+            experienceJson["menu"] = menuJson;
+            experienceJson["pages"] = pagesJson;
 
             return experienceJson;
+
+            //for (int i = 0; i < pages.Length; i++)
+            //{
+            //    //foreach(var pageId in subPageJson.Keys)
+            //    //{
+            //    //    json[pageId] = subPageJson[pageId];
+            //    //}
+            //    json.Add(subPageJson);  // Will this work to combine json objects???
+            //}
         }
 
         public void SaveJson()
@@ -172,42 +213,129 @@ namespace Venti.Experience
                 // TODO: Check whether versions match
 
                 // Update metadata
-                if (json["metadata"] != null)
-                {
-                    if (json["metadata"]["hash"].Value != metaData.hash)
-                    {
-                        string metadataJsonString = json["metadata"].ToString();
-                        metaData = JsonConvert.DeserializeObject<Metadata>(metadataJsonString);
+                //if (json["metadata"] != null)
+                //{
+                //    if (json["metadata"]["hash"].Value != metaData.hash)
+                //    {
+                //        string metadataJsonString = json["metadata"].ToString();
+                //        metaData = JsonConvert.DeserializeObject<Metadata>(metadataJsonString);
 
-                        onMetadataUpdate?.Invoke();
+                //        onMetadataUpdate?.Invoke();
+                //    }
+                //}
+
+                // Update all fields from json
+                //if (json["fields"] != null)
+                //{
+                //    JSONArray fetchedFields = json["fields"].AsArray;
+                //    for (int i = 0; i < fields.Length; i++)
+                //    {
+                //        if (i >= fetchedFields.Count || fetchedFields[i] == null)
+                //            continue;
+
+                //        // Catch any errors but continue updating other fields
+                //        try
+                //        {
+                //            JSONObject fetchedField = fetchedFields[i].AsObject;
+                //            fields[i].SetFromJson(fetchedField);
+                //        }
+                //        catch (Exception e)
+                //        {
+                //            Debug.LogError("Unable to parse field JSON: " + e.Message);
+                //            success = false;
+                //        }
+                //    }
+                //}
+
+                // TODO: Simplify this by refactoring into functions
+                JSONObject hashes = json["hashes"].AsObject;
+                JSONObject values = json["values"].AsObject;
+                if (hashes == null)
+                {
+                    Debug.LogError("hashes is null in fetched app config");
+                    return false;
+                }
+
+                if (values == null)
+                {
+                    Debug.LogError("values is null in fetched app config");
+                    return false;
+                }
+
+                foreach (var page in pages)
+                {
+                    try
+                    {
+                        if (!page.SetFromJson(hashes, values))
+                            success = false;
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError("Failed to set page (" + page.id + ")" + e.Message);
                     }
                 }
 
-                // Update all fields from json
-                if (json["fields"] != null)
-                {
-                    JSONArray fetchedFields = json["fields"].AsArray;
-                    for (int i = 0; i < fields.Length; i++)
-                    {
-                        if (i >= fetchedFields.Count || fetchedFields[i] == null)
-                            continue;
+                /*List<FieldsPage> allFieldsPages = GetAllFieldsPages(pages);
 
+                foreach (var fieldPath in hashes.Keys)
+                {
+                    if (!values.HasKey(fieldPath))
+                    {
+                        Debug.LogError("No matching value found for hash with fieldPath: " + fieldPath);
+                        //success = false;
+                        continue;
+                    }
+
+                    string hash = hashes[fieldPath].Value;
+                    JSONNode value = values[fieldPath];
+                    if (value != null)
+                    {
                         // Catch any errors but continue updating other fields
                         try
                         {
-                            JSONObject fetchedField = fetchedFields[i].AsObject;
-                            fields[i].SetFromJson(fetchedField);
+                            string[] fieldPathParts = fieldPath.Split('.');
+                            if (fieldPathParts.Length > 2 && fieldPathParts[1] == "fields")
+                            {
+                                string pageId = fieldPathParts[0];
+                                string fieldId = fieldPathParts[2];
+                                FieldsPage valuePage = allFieldsPages.Find((page) => page.id == pageId);
+                                if (valuePage != null)
+                                {
+                                    BaseField[] pageFields = valuePage.fields;
+                                    BaseField field = Array.Find(pageFields, (field) => field.id.Equals(fieldId));
+
+                                    if (field == null)
+                                    {
+                                        Debug.LogError("No field found with fieldId " + fieldId + " in fieldPath " + fieldPath);
+                                        continue;
+                                    }
+
+                                    string[] fieldSubPath = new string[fieldPathParts.Length - 3];
+                                    for (int i = 0; i < fieldSubPath.Length; i++)
+                                        fieldSubPath[i] = fieldPathParts[i + 3];
+
+                                    UpdateFieldValue(hash, fieldSubPath, field, value);
+                                }
+                            }
                         }
                         catch (Exception e)
                         {
                             Debug.LogError("Unable to parse field JSON: " + e.Message);
                             success = false;
+                            continue;
                         }
                     }
-                }
+                    else
+                    {
+                        Debug.LogError("Null value found for fieldPath: " + fieldPath);
+                        success = false;
+                        continue;
+                    }
+                }*/
+
 
                 if (success)    // so manual refresh works
-                    appHash = json["hash"].ToString();
+                    appHash = json["hash"].Value;
 
                 if (saveJson)
                     FileHandler.WriteString(json.ToString(), configFileName + ".json", CacheManager.cacheFolderName);
@@ -217,12 +345,34 @@ namespace Venti.Experience
                     onFieldsUpdate?.Invoke();
 
                 return success;
+
             }
             catch (Exception e)
             {
                 Debug.LogError("Unable to parse experience setting JSON: " + e.Message);
                 return false;
             }
+        }
+
+        private List<FieldsPage> GetAllFieldsPages(BasePage[] _pages)
+        {
+            List<FieldsPage> fieldsPages = new List<FieldsPage>();
+            for (int i = 0; i < pages.Length; i++)
+            {
+                if (pages[i].type == PageType.pageParent)
+                {
+                    NestedPage nestedPage = (NestedPage)pages[i];
+                    List<FieldsPage> subPages = GetAllFieldsPages(nestedPage.subPages);
+                    for (int j = 0; j < subPages.Count; j++)
+                        fieldsPages.Add(subPages[j]);
+                }
+                else
+                {
+                    fieldsPages.Add((FieldsPage)pages[i]);
+                }
+            }
+
+            return fieldsPages;
         }
         #endregion
 

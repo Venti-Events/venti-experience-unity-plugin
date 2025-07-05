@@ -15,7 +15,7 @@ namespace Venti.Experience
 
         [field: Header("Values")]
         [field: SerializeField] public ListHeaderField header { get; private set; }
-        [field: SerializeField] public ListDefaultField @default { get; private set; }
+        //[field: SerializeField] public ListDefaultField @default { get; private set; }
         [field: SerializeField][field: ReadOnly] public ListRowField[] value { get; private set; }
         private GameObject rows;
 
@@ -27,7 +27,7 @@ namespace Venti.Experience
 
         public ListField()
         {
-            type = FieldType.List;
+            type = FieldType.list;
         }
 
         public override void FetchChildFields(bool searchForInactive = false)
@@ -40,9 +40,9 @@ namespace Venti.Experience
                 header.FetchChildFields(searchForInactive);
 
             // Fetch default and populate its child fields
-            @default = this.GetComponentInChildren<ListDefaultField>(searchForInactive);
-            if (@default != null)
-                @default.FetchChildFields(searchForInactive);
+            //@default = this.GetComponentInChildren<ListDefaultField>(searchForInactive);
+            //if (@default != null)
+            //    @default.FetchChildFields(searchForInactive);
 
             // Fetch all row fields and populate their child fields
             value = Utils.FetchChildFields<ListRowField>(this.gameObject, searchForInactive);
@@ -53,16 +53,16 @@ namespace Venti.Experience
             }
         }
 
-        public override void ClearFields()
+        public override void Clear()
         {
             if (header != null)
                 header.ClearFields();
-            if (@default != null)
-                @default.ClearFields();
+            //if (@default != null)
+            //    @default.ClearFields();
             Utils.ClearChildFields(value);
 
             header = null;
-            @default = null;
+            //@default = null;
             value = null;
         }
 
@@ -78,13 +78,13 @@ namespace Venti.Experience
                 headerObject.transform.SetSiblingIndex(0);
             }
 
-            if (@default == null)
-            {
-                GameObject defaultObject = new GameObject("Default");
-                defaultObject.transform.SetParent(this.transform);
-                @default = defaultObject.AddComponent<ListDefaultField>();
-                defaultObject.transform.SetSiblingIndex(1);
-            }
+            //if (@default == null)
+            //{
+            //    GameObject defaultObject = new GameObject("Default");
+            //    defaultObject.transform.SetParent(this.transform);
+            //    @default = defaultObject.AddComponent<ListDefaultField>();
+            //    defaultObject.transform.SetSiblingIndex(1);
+            //}
         }
 
         public void AddDefaultRow()
@@ -97,34 +97,106 @@ namespace Venti.Experience
                 return;
             }
 
-            @default.AddRow(header);
+            //@default.AddRow(header);
         }
 
         public override JSONObject GetJson()
         {
             JSONObject json = base.GetJson();
             json["header"] = header.GetJson();
-            json["default"] = @default.GetJson();
+            //json["default"] = @default.GetJson();
             return json;
         }
 
-        public override bool SetFromJson(JSONObject json)
-        {
-            if (!base.SetFromJson(json))
-                return false;
+        //public override bool SetFromJson(JSONObject json)
+        //{
+        //    if (!base.SetFromJson(json))
+        //        return false;
 
-            if (json["value"] == null)
-            {
-                value = new ListRowField[0];
-                Debug.LogError("List value is null in JSON for " + id);
-                return false;
-            }
+        //    if (json["value"] == null)
+        //    {
+        //        value = new ListRowField[0];
+        //        Debug.LogError("List value is null in JSON for " + id);
+        //        return false;
+        //    }
+
+        //    if (header.value == null || header.value.Length == 0)
+        //    {
+        //        Debug.LogError("Header is empty. Cannot add default row.");
+        //        return false;
+        //    }
+
+        //    // Create rows object if it doesn't exist
+        //    if (rows == null)
+        //    {
+        //        rows = new GameObject("Rows");
+        //        rows.transform.SetParent(this.transform);
+        //    }
+        //    else
+        //    {
+        //        // Clear existing row gameobjects
+        //        foreach (Transform child in rows.transform)
+        //            Destroy(child.gameObject);
+        //    }
+
+        //    // Clear pending row ids
+        //    pendingLoadRowIds.Clear();
+        //    // Inform parent that async value load has started
+        //    base.OnAsyncValueLoadStart(id);
+
+        //    // Create new rows from JSON
+        //    JSONArray rowsJson = json["value"].AsArray;
+        //    // Empty existing value array
+        //    value = new ListRowField[rowsJson.Count];
+
+        //    // Create new row gameobjects and populate value array
+        //    for (int i = 0; i < rowsJson.Count; i++)
+        //    {
+        //        JSONObject rowJson = rowsJson[i].AsObject;
+
+        //        GameObject rowObj = new GameObject($"{rowJson["id"]} (Row {i})");
+        //        rowObj.transform.SetParent(rows.transform);
+        //        rowObj.transform.SetSiblingIndex(i);
+
+        //        ListRowField rowField = rowObj.AddComponent<ListRowField>();
+        //        rowField.id = rowJson["id"];
+        //        rowField.GenerateGameObjectName();
+        //        rowField.GenerateFields(header.value);
+        //        rowField.SetAsyncLoadEvents(hash, OnRowLoadStart, OnRowLoadEnd);
+        //        rowField.SetFromJson(rowJson);
+
+        //        value[i] = rowField;
+        //    }
+
+        //    // There were no async values to load
+        //    if (pendingLoadRowIds.Count == 0)
+        //    {
+        //        onChange?.Invoke(value);
+        //        onChangeWithId?.Invoke(id, value);
+
+        //        // Inform parent that all async value have been loaded
+        //        base.OnAsyncValueLoadEnd(id);
+        //    }
+
+        //    return true;
+        //}
+
+        public override bool SetFromJson(string[] stack, JSONObject hashes, JSONObject values)
+        {
+            //if (!base.SetFromJson(stack, hashes, values))
+            //    return false;
 
             if (header.value == null || header.value.Length == 0)
             {
-                Debug.LogError("Header is empty. Cannot add default row.");
+                Debug.LogWarning($"Header is invalid for list: {_name} ({id})");
                 return false;
             }
+
+            bool success = true;
+            string basePath = GetPath(stack);
+
+            string[] orderStack = Utils.JoinArrays(stack, new string[] { id, "value", "order" });
+            string orderPath = string.Join(".", orderStack);
 
             // Create rows object if it doesn't exist
             if (rows == null)
@@ -132,38 +204,105 @@ namespace Venti.Experience
                 rows = new GameObject("Rows");
                 rows.transform.SetParent(this.transform);
             }
-            else
-            {
-                // Clear existing row gameobjects
-                foreach (Transform child in rows.transform)
-                    Destroy(child.gameObject);
-            }
 
             // Clear pending row ids
             pendingLoadRowIds.Clear();
             // Inform parent that async value load has started
             base.OnAsyncValueLoadStart(id);
 
-            // Create new rows from JSON
-            JSONArray rowsJson = json["value"].AsArray;
-            // Empty existing value array
-            value = new ListRowField[rowsJson.Count];
-
-            // Create new row gameobjects and populate value array
-            for (int i = 0; i < rowsJson.Count; i++)
+            string orderHash = hashes[orderPath];
+            if (orderHash == null)
             {
-                JSONObject rowJson = rowsJson[i].AsObject;
+                hash = orderHash;
+                value = new ListRowField[0];
+                Debug.LogWarning($"Order hash is invalid for list: {_name} ({id})");
+                return false;
+            }
 
-                GameObject rowObj = new GameObject($"{rowJson["id"]} (Row {i})");
-                rowObj.transform.SetParent(rows.transform);
-                rowObj.transform.SetSiblingIndex(i);
+            JSONArray orderArray = values[orderPath].AsArray;
+            if (orderArray == null) // || !values[orderPath].IsArray
+            {
+                value = new ListRowField[0];
+                Debug.LogWarning($"Order is invalid for list: {_name} ({id})");
+                return false;
+            }
 
-                ListRowField rowField = rowObj.AddComponent<ListRowField>();
-                rowField.id = rowJson["id"];
+            // If hash for order has changed, need to recreate the whole list
+            if (orderHash != hash)
+            {
+                // Clear existing row gameobjects
+                foreach (Transform child in rows.transform)
+                    Destroy(child.gameObject);
+
+                for (int i = 0; i < orderArray.Count; i++)
+                {
+                    // Create row gameobject
+                    GameObject rowObj = new GameObject();
+                    rowObj.transform.SetParent(rows.transform);
+                    rowObj.transform.SetSiblingIndex(i);
+
+                    rowObj.AddComponent<ListRowField>();
+                }
+
+                // Empty existing value array
+                value = new ListRowField[orderArray.Count];
+            }
+            hash = orderHash;
+
+            // Create new rows from JSON
+            for (int i = 0; i < orderArray.Count; i++)
+            {
+                // Create row gameobject
+                //GameObject rowObj = new GameObject();
+                //rowObj.transform.SetParent(rows.transform);
+                //rowObj.transform.SetSiblingIndex(i);
+                GameObject rowObj = rows.transform.GetChild(i).gameObject;
+
+                string rowId = orderArray[i].Value;
+                if (rowId == null)
+                {
+                    Debug.LogError($"Value is invalid for rowId at {i} in order for list: {_name} ({id})");
+                    //return false;
+                    success = false;
+                    continue;
+                }
+
+                rowObj.name = $"{rowId} (Row {i})";
+
+                string[] rowStack = Utils.JoinArrays(stack, new string[] { id, "value", "rows", rowId });
+                string rowPath = string.Join(".", rowStack);
+
+                string rowHash = hashes[rowPath].Value;
+                if (rowHash == null)
+                {
+                    Debug.LogError($"Hash is null for rowId {rowId} for list: {_name} ({id})");
+                    //return false;
+                    success = false;
+                    continue;
+                }
+
+                // Add component to row gameobject
+                //ListRowField rowField = rowObj.AddComponent<ListRowField>();
+                ListRowField rowField = rowObj.GetComponent<ListRowField>();
+                rowField.id = rowId;
                 rowField.GenerateGameObjectName();
                 rowField.GenerateFields(header.value);
                 rowField.SetAsyncLoadEvents(hash, OnRowLoadStart, OnRowLoadEnd);
-                rowField.SetFromJson(rowJson);
+
+                JSONObject rowJson = values[rowPath].AsObject;
+                if (rowJson == null)     // (!values[rowPath].IsObject)
+                {
+                    Debug.LogError($"Value is not an object for rowId {rowId} for list: {_name} ({id})");
+                    //return false;
+                    success = false;
+                    continue;
+                }
+
+                // Make JSON object with fake hashes for the ListRowField
+                JSONObject fakeHashes = new JSONObject();
+                foreach (var key in rowJson.Keys)
+                    fakeHashes[key] = rowHash;
+                rowField.SetFromJson(new string[] { }, fakeHashes, rowJson);
 
                 value[i] = rowField;
             }
@@ -178,7 +317,7 @@ namespace Venti.Experience
                 base.OnAsyncValueLoadEnd(id);
             }
 
-            return true;
+            return success;
         }
 
         private void OnRowLoadStart(string rowId)

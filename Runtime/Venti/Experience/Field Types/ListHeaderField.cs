@@ -19,11 +19,24 @@ namespace Venti.Experience
             value = null;
         }
 
-        public JSONArray GetJson()
+        public JSONObject GetJson()
         {
-            JSONArray json = new JSONArray();
+            JSONObject json = new JSONObject();
+            //for (int i = 0; i < value.Length; i++)
+            //    json[i] = value[i].GetJson();
+
+            JSONArray orderJson = new JSONArray();
+            JSONObject fieldsJson = new JSONObject();
+
             for (int i = 0; i < value.Length; i++)
-                json[i] = value[i].GetJson();
+            {
+                orderJson.Add(value[i].id);
+                fieldsJson[value[i].id] = value[i].GetJson();
+            }
+
+            json["order"] = orderJson;
+            json["fields"] = fieldsJson;
+
             return json;
         }
     }

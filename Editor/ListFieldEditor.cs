@@ -26,7 +26,7 @@ namespace Venti.Experience
 
             if (GUILayout.Button("Clear List"))
             {
-                script.ClearFields();
+                script.Clear();
             }
 
             if (GUILayout.Button("Check Layout"))
@@ -34,10 +34,10 @@ namespace Venti.Experience
                 script.CheckLayout();
             }
 
-            if (GUILayout.Button("Add Default Row"))
-            {
-                script.AddDefaultRow();
-            }
+            //if (GUILayout.Button("Add Default Row"))
+            //{
+            //    script.AddDefaultRow();
+            //}
         }
     }
 }

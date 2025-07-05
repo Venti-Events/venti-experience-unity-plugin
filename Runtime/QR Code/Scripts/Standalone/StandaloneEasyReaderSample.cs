@@ -57,7 +57,8 @@ public class StandaloneEasyReaderSample : MonoBehaviour
     private class RefreshTokenResponse { public string data; }
 
     // private const string refreshUrl = "/project-license/3192dd59-361a-4910-bd85-1f713c37f7bf/get-refresh-token";
-    private const string refreshUrl = @"/project-license/get-refresh-token";
+    //private const string refreshUrl = @"/project-license/get-refresh-token";
+    private const string refreshUrl = @"/projects/token/refresh";
 
     private void Start()
     {
@@ -169,6 +170,7 @@ public class StandaloneEasyReaderSample : MonoBehaviour
 
             if (www.result == VentiApiRequest.Result.Success)
             {
+                // TODO: Check if the experienceId of this experience and supplied app-key amtch
                 Debug.Log($"Code request success: {www.downloadHandler.text}");
 
                 var resp = JsonUtility.FromJson<RefreshTokenResponse>(www.downloadHandler.text);

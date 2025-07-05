@@ -1,27 +1,30 @@
-using SimpleJSON;
-using System;
 using UnityEngine;
 using UnityEngine.Events;
+using SimpleJSON;
+using System;
 
 namespace Venti.Experience
 {
     [System.Serializable]
-    public class TextField : BaseField
+    public class IntField : BaseField
     {
         [Header("Configurations")]
-        public TextDisplayType display; // InputField or TextArea
+        public int step;
+        public int minValue;
+        public int maxValue;
+        public NumberDisplay display;
 
         [field: Header("Values")]
-        //public string @default;
-        [field: SerializeField][field: ReadOnly] public string value { get; private set; }
+        //public int @default;
+        [field: SerializeField][field: ReadOnly] public int value { get; private set; }
 
         [field: Header("Events")]
-        [field: SerializeField] public UnityEvent<string> onChange { get; private set; }   // send value
-        [field: SerializeField] public UnityEvent<string, string> onChangeWithId { get; private set; } // send id and value
-
-        public TextField()
+        [field: SerializeField] public UnityEvent<int> onChange { get; private set; }
+        [field: SerializeField] public UnityEvent<string, int> onChangeWithId { get; private set; }
+       
+        public IntField()
         {
-            type = FieldType.text;
+            type = FieldType.number;
         }
 
         public override JSONObject GetJson()
@@ -29,6 +32,10 @@ namespace Venti.Experience
             JSONObject json = base.GetJson();
             //json["default"] = @default;
             json["display"] = display.ToString();
+
+            json["config"]["step"] = step;
+            json["config"]["minValue"] = minValue;
+            json["config"]["maxValue"] = maxValue;
 
             return json;
         }
@@ -40,11 +47,11 @@ namespace Venti.Experience
 
         //    if (json["value"] == null)
         //    {
-        //        //value = @default;    
+        //        //value = @default;
         //        Debug.LogWarning("value is null in JSON for " + id);
         //    }
         //    else
-        //       value = json["value"].Value;
+        //        value = json["value"].AsInt;
 
         //    onChange.Invoke(value);
         //    onChangeWithId.Invoke(id, value);
@@ -64,22 +71,22 @@ namespace Venti.Experience
                 Debug.LogWarning("Value is null for field: " + _name + " (" + id + ")");
                 return false;
             }
-            if (!_value.IsString)
-                throw new Exception("Value is not a string for field: " + _name + " (" + id + ")");
+            if (!_value.IsNumber)
+                throw new Exception("Value is not an number for field: " + _name + " (" + id + ")");
 
-            value = _value.Value;
+            value = _value.AsInt;
 
             onChange.Invoke(value);
             onChangeWithId.Invoke(id, value);
 
             return true;
         }
+    }
 
-        public enum TextDisplayType
-        {
-            input,
-            textArea,
-            //url
-        }
+    public enum NumberDisplay
+    {
+        input,
+        slider,
+        //stepper
     }
 }

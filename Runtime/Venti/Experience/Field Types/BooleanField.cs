@@ -1,3 +1,4 @@
+using System;
 using SimpleJSON;
 using UnityEngine;
 using UnityEngine.Events;
@@ -10,8 +11,8 @@ namespace Venti.Experience
         [Header("Configurations")]
         public BooleanDisplay display;
 
-        [Header("Values")]
-        public bool @default;
+        //[Header("Values")]
+        //public bool @default;
         [field: SerializeField][field: ReadOnly] public bool value { get; private set; }
 
         [field: Header("Events")]
@@ -20,30 +21,56 @@ namespace Venti.Experience
 
         public BooleanField()
         {
-            type = FieldType.Boolean;
+            type = FieldType.boolean;
         }
 
         public override JSONObject GetJson()
         {
             JSONObject json = base.GetJson();
-            json["default"] = @default;
+            //json["default"] = @default;
             json["display"] = display.ToString();
 
             return json;
         }
 
-        public override bool SetFromJson(JSONObject json)
+        //public override bool SetFromJson(JSONObject json)
+        //{
+        //    if (!base.SetFromJson(json))
+        //        return false;
+
+        //    if (json["value"] == null)
+        //    {
+        //        //value = @default;
+        //        Debug.LogWarning("value is null in JSON for " + id);
+        //    }
+        //    else
+        //        value = json["value"].AsBool;
+
+        //    onChange.Invoke(value);
+        //    onChangeWithId.Invoke(id, value);
+
+        //    return true;
+        //}
+
+        public override bool SetFromJson(string[] stack, JSONObject hashes, JSONObject values)
         {
-            if (!base.SetFromJson(json))
+            if (!base.SetFromJson(stack, hashes, values))
                 return false;
 
-            if (json["value"] == null)
+            string path = GetPath(stack);
+            JSONNode _value = values[path];
+            if (_value == null)
             {
-                value = @default;
-                Debug.LogWarning("value is null in JSON for " + id);
+                Debug.LogWarning("Value is null for field: " + _name + " (" + id + ")");
+                return false;
             }
-            else
-                value = json["value"].AsBool;
+            if (!_value.IsBoolean)
+            {
+                throw new Exception("Value is not a boolean for field: " + _name + " (" + id + ")");
+                //return false;
+            }
+
+            value = _value.AsBool;
 
             onChange.Invoke(value);
             onChangeWithId.Invoke(id, value);
@@ -53,8 +80,8 @@ namespace Venti.Experience
 
         public enum BooleanDisplay
         {
-            Toggle,
-            Checkbox
+            toggle,
+            checkbox
         }
     }
 }

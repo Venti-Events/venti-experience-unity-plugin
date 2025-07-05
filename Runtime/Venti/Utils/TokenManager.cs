@@ -18,7 +18,8 @@ namespace Venti
 
         public VentiApiRequest.Result refreshTokenResult { get; private set; }
 
-        public const string refreshTokenUrl = "/project-license/get-access-token";
+        //public const string refreshTokenUrl = "/project-license/get-access-token";
+        public const string refreshTokenUrl = "/projects/token/access";
 
         protected override void Awake()
         {

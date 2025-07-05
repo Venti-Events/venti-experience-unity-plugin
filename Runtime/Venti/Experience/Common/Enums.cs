@@ -49,19 +49,28 @@ namespace Venti.Experience
     public enum FieldType
     {
         //-------- Simple --------
-        Boolean,
-        Color,
-        Date,
-        Time,
-        DateTime,
-        Dropdown,
-        Tags,
-        Image,
-        Range,
-        Text,
+        boolean,
+        color,
+        date,
+        time,
+        dateTime,
+        select,
+        tags,
+        file,
+        number,
+        text,
         //-------- Complex --------
-        List,
-        ListRow,
+        list,
+        listRow,
+        group
         //Dictionary
+    }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum PageType
+    {
+        fields,
+        imageFields,
+        pageParent
     }
 }

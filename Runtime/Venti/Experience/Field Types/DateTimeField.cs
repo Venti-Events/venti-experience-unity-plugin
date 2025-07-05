@@ -8,11 +8,11 @@ namespace Venti.Experience
     [System.Serializable]
     public class DateTimeField : BaseField
     {
-        //[Header("Configurations")]
-        //public DateTimeDisplay display;
+        [Header("Configurations")]
+        public DateTimeDisplay display;
 
-        [Header("Values")]
-        public string @default;
+        [field: Header("Values")]
+        //public string @default;
         [field: SerializeField][field: ReadOnly] public DateTime value { get; private set; }
         [field: SerializeField][field: ReadOnly] public string valueRaw { get; private set; }
 
@@ -22,42 +22,70 @@ namespace Venti.Experience
 
         public DateTimeField()
         {
-            type = FieldType.DateTime;
+            type = FieldType.dateTime;
         }
 
         public override JSONObject GetJson()
         {
             JSONObject json = base.GetJson();
             //json["default"] = @default.ToUniversalTime();
-            json["default"] = @default;
-
-            //json["display"] = display.ToString();
-
+            //json["default"] = @default;
+            json["display"] = display.ToString();
             return json;
         }
 
-        public override bool SetFromJson(JSONObject json)
+        //public override bool SetFromJson(JSONObject json)
+        //{
+        //    if (!base.SetFromJson(json))
+        //        return false;
+
+        //    if (json["value"] == null)
+        //    {
+        //        //valueRaw = @default;
+        //        Debug.LogWarning("value is null in JSON for " + id);
+        //    }
+        //    else
+        //        valueRaw = json["value"].Value;
+
+        //    // Convert string to DateTime
+        //    if (DateTime.TryParse(valueRaw, out DateTime dateTime))
+        //    {
+        //        value = dateTime;
+        //    }
+        //    else
+        //    {
+        //        throw new Exception("Invalid DateTime format in JSON for " + id);
+        //    }
+
+        //    onChange.Invoke(value);
+        //    onChangeWithId.Invoke(id, value);
+
+        //    return true;
+        //}
+
+        public override bool SetFromJson(string[] stack, JSONObject hashes, JSONObject values)
         {
-            if (!base.SetFromJson(json))
+            if (!base.SetFromJson(stack, hashes, values))
                 return false;
 
-            if (json["value"] == null)
+            string path = GetPath(stack);
+            JSONNode _value = values[path];
+            if (_value == null)
             {
-                valueRaw = @default;
-                Debug.LogWarning("value is null in JSON for " + id);
+                Debug.LogWarning("Value is null for field: " + _name + " (" + id + ")");
+                return false;
             }
-            else
-                valueRaw = json["value"].Value;
+            if (!_value.IsString)
+                throw new Exception("Value is not a string for field: " + _name + " (" + id + ")");
 
+            valueRaw = _value.Value;
+
+            // Convert hex string to Color
             // Convert string to DateTime
             if (DateTime.TryParse(valueRaw, out DateTime dateTime))
-            {
                 value = dateTime;
-            }
             else
-            {
                 throw new Exception("Invalid DateTime format in JSON for " + id);
-            }
 
             onChange.Invoke(value);
             onChangeWithId.Invoke(id, value);
@@ -65,11 +93,11 @@ namespace Venti.Experience
             return true;
         }
 
-        //public enum DateTimeDisplay
-        //{
-        //    Date,
-        //    Time,
-        //    DateTime
-        //}
+        public enum DateTimeDisplay
+        {
+            dateTime,
+            //date,
+            //time,
+        }
     }
 }

@@ -16,7 +16,8 @@ namespace Venti.Theme
 
         // JSON File Path
         private const string configFileName = "theme-config";
-        private const string getThemeUrl = @"/project/get-project-theme-config";
+        //private const string getThemeUrl = @"/project/get-project-theme-config";
+        private const string getThemeUrl = @"/projects/theme-config";
 
         private string themeHash;
         private List<string> pendingAssetLoadPaths = new List<string>();
@@ -124,6 +125,8 @@ namespace Venti.Theme
                 return false;
             }
 
+            Debug.Log(jsonStr);
+
             JSONObject json = JSON.Parse(jsonStr).AsObject;
             if (json == null)
             {
@@ -160,7 +163,7 @@ namespace Venti.Theme
                 bool success = SetFromJson(json);
 
                 if (success)    // so manual refresh works
-                    themeHash = json["hash"].ToString();
+                    themeHash = json["hash"].Value;
 
                 if (saveJson)
                     FileHandler.WriteString(json.ToString(), configFileName + ".json", CacheManager.cacheFolderName);

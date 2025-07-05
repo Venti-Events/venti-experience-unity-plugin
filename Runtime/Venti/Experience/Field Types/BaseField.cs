@@ -13,7 +13,7 @@ namespace Venti.Experience
         public string description;    // Shown on hovering on info icon
         [SerializeField][ReadOnly] protected string hash;
 
-        [field: NonSerialized] public virtual FieldType? type { get; protected set; } = null;
+        [field: NonSerialized] public FieldType? type { get; protected set; } = null;
 
         private string eventCallPrefix;
         private Action<string> valueLoadStartEvent;
@@ -30,7 +30,7 @@ namespace Venti.Experience
             GenerateGameObjectName();
         }
 
-        public virtual void ClearFields()
+        public virtual void Clear()
         {
             // No implementation for base fields
         }
@@ -50,24 +50,44 @@ namespace Venti.Experience
             return json;
         }
 
-        public virtual bool SetFromJson(JSONObject json)
-        {
-            if (json == null)
-                throw new Exception("JSON is null for field: " + _name + " (" + id + ")");
-            if (id != json["id"])
-                throw new Exception("ID mismatch for field: " + _name + " (" + id + ") - Expected: " + id + ", Found: " + json["id"]);
-            //if (json["hash"] == null)
-            //    throw new Exception("No hash for field: " + _name + " (" + id + ")");
+        //public virtual bool SetFromJson(JSONObject json)
+        //{
+        //    if (json == null)
+        //        throw new Exception("JSON is null for field: " + _name + " (" + id + ")");
+        //    if (id != json["id"])
+        //        throw new Exception("ID mismatch for field: " + _name + " (" + id + ") - Expected: " + id + ", Found: " + json["id"]);
+        //    //if (json["hash"] == null)
+        //    //    throw new Exception("No hash for field: " + _name + " (" + id + ")");
 
-            if (json["hash"] == hash)
+        //    if (json["hash"] == hash)
+        //        return false;
+
+        //    hash = json["hash"];
+        //    return true;
+        //}
+        public virtual bool SetFromJson(string[] stack, JSONObject hashes, JSONObject values)
+        {
+            string path = GetPath(stack);
+            string _hash = hashes[path];
+            if (_hash == null)
+                throw new Exception("Hash is null for field: " + _name + " (" + id + ")");
+
+            if (_hash == hash)
                 return false;
 
-            hash = json["hash"];
+            hash = _hash;
             return true;
         }
 
+        protected string GetPath(string[] stack)
+        {
+            string[] fullStack = Utils.JoinArrays(stack, new string[] { id });
+            string path = string.Join(".", fullStack);
+            return path;
+        }
+
         public void SetAsyncLoadEvents(string prefix, Action<string> onValueLoadStart, Action<string> onValueLoadEnd)
-        {                
+        {
             if (prefix == null)
                 eventCallPrefix = "";
             else

@@ -25,10 +25,11 @@ namespace Venti
 
         private const string checkInAppUrl = @"https://venti-checkin.web.app";
         // private const string getSessionUrl = @"/app-sessions";
-        private const string getActiveSessionUrl = @"/project-app-session/app-active-sessions-appkey";
-        private const string getAttendeeUrl = @"/attendee/get-attendee-with-appkey";
-        private const string endSessionUrl = @"/project-app-session/end-app-session-appkey";
-        private const string endAllSessionsUrl = @"/project-app-session/end-all-sessions-appkey";
+        private const string getActiveSessionUrl = @"/projects/apps/sessions/active";   // @"/project-app-session/app-active-sessions-appkey";
+        private const string getAttendeeUrl = @"/projects/attendees/{0}";   // {0}: attendeeId  // @"/attendee/get-attendee-with-appkey";
+        private const string imageUploadSessionsUrl = @"/projects/apps/sessions/{0}/image";   // {0}: sessionId
+        private const string endSessionUrl = @"/projects/apps/sessions/{0}/end";    // {0}: sessionId    // @"/project-app-session/end-app-session-appkey";
+        private const string endAllSessionsUrl = @"/projects/apps/sessions/end";   // @"/project-app-session/end-all-sessions-appkey";
 
         public void FetchActiveSession()
         {
@@ -203,7 +204,7 @@ namespace Venti
                 yield break;
             }
 
-            using (VentiApiRequest www = VentiApiRequest.GetApi($"{getAttendeeUrl}/{attendeeId}"))
+            using (VentiApiRequest www = VentiApiRequest.GetApi(string.Format(getAttendeeUrl, attendeeId)))
             {
                 yield return www.SendAuthenticatedApiRequest();
 
@@ -262,7 +263,10 @@ namespace Venti
             if (score >= 0)
                 dataJson["score"] = score;
 
-            using (VentiApiRequest www = VentiApiRequest.PostApi($"{endSessionUrl}/{session.id}", dataJson.ToString(), "application/json"))
+            using (VentiApiRequest www = VentiApiRequest.PostApi(
+                string.Format(endSessionUrl, session.id),
+                dataJson.ToString(),
+                "application/json"))
             {
                 yield return www.SendAuthenticatedApiRequest();
 
@@ -301,7 +305,7 @@ namespace Venti
             WWWForm form = new WWWForm();
             form.AddBinaryData("file", textureBytes, "image.jpg", "image/jpeg");
 
-            using (VentiApiRequest www = VentiApiRequest.PostApi($"{endSessionUrl}/image/{session.id}", form))
+            using (VentiApiRequest www = VentiApiRequest.PostApi(string.Format(imageUploadSessionsUrl, session.id), form))
             {
                 yield return www.SendAuthenticatedApiRequest();
 

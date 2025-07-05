@@ -1,11 +1,13 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Venti.Experience
 {
     public static class Utils
     {
-        // Fetch all child fields of a parent object
+        // Fetch all child of given type of a parent object
         public static T[] FetchChildFields<T>(GameObject parent, bool searchForInactive = false)
         {
             List<T> directChildFields = new List<T>();
@@ -13,6 +15,9 @@ namespace Venti.Experience
             for (int i = 0; i < parent.transform.childCount; i++)
             {
                 Transform child = parent.transform.GetChild(i);
+                if (!searchForInactive && !child.gameObject.activeSelf)
+                    continue;
+
                 T field = child.GetComponent<T>();
                 if (field == null) continue;
 
@@ -26,15 +31,49 @@ namespace Venti.Experience
             return directChildFields.ToArray();
         }
 
-        public static void ClearChildFields<T>(T[] fields)
+        public static void ClearChildFields(BaseField[] fields)
         {
             if (fields == null) return;
 
             foreach (var field in fields)
             {
-                BaseField baseField = field as BaseField;
-                if (baseField != null)
-                    baseField.ClearFields();
+                ////BaseField baseField = field as BaseField;
+                //if (baseField != null)
+                //    baseField.Clear();
+                if (field != null)
+                    field.Clear();
+            }
+        }
+
+        public static BasePage[] FetchChildPages(GameObject parent, bool searchForInactive = false)
+        {
+            List<BasePage> directChildPages = new List<BasePage>();
+
+            for (int i = 0; i < parent.transform.childCount; i++)
+            {
+                Transform child = parent.transform.GetChild(i);
+                if (!searchForInactive && !child.gameObject.activeSelf)
+                    continue;
+
+                BasePage page = child.GetComponent<BasePage>();
+                if (page == null) continue;
+
+                directChildPages.Add(page);
+
+                page.FetchChildren(searchForInactive);
+            }
+
+            return directChildPages.ToArray();
+        }
+
+        public static void ClearChildPages(BasePage[] pages)
+        {
+            if (pages == null) return;
+
+            foreach (var page in pages)
+            {
+                if (page != null)
+                    page.Clear();
             }
         }
 
@@ -50,6 +89,18 @@ namespace Venti.Experience
             }
 
             return new string(stringChars);
+        }
+
+        public static T[] JoinArrays<T>(T[] array1, T[] array2)
+        {
+            if (array1 == null || array2 == null)
+                return null;
+
+            T[] joinedArray = new T[array1.Length + array2.Length];
+            Array.Copy(array1, 0, joinedArray, 0, array1.Length);
+            Array.Copy(array2, 0, joinedArray, array1.Length, array2.Length);
+
+            return joinedArray;
         }
     }
 }

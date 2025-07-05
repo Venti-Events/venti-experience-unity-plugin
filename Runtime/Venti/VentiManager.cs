@@ -15,7 +15,7 @@ namespace Venti
     public class VentiManager : Singleton<VentiManager>
     {
         private SocketConnector socket;
-        public const string getAppAndThemeHashesUrl = @"/experience-app/get-experience-app-configuration-hash";
+        public const string getAppAndThemeHashesUrl = @"/projects/apps/config/hash"; // @"/experience-app/get-experience-app-configuration-hash";
 
         void OnEnable()
         {
@@ -26,7 +26,7 @@ namespace Venti
             // }
             // else
             // {
-            //     SceneManager.LoadScene("QRScanScene");
+            //     SceneManager.LoadScene("AppKeyScan");
             //     Debug.LogError("PlayerPrefs doesn't have appKey saved");
             // }
 
@@ -95,7 +95,7 @@ namespace Venti
         #region PRIVATE_FUNCTIONS
         private IEnumerator GetHashes()
         {
-            using (VentiApiRequest www = VentiApiRequest.PostApi(getAppAndThemeHashesUrl, new WWWForm()))
+            using (VentiApiRequest www = VentiApiRequest.GetApi(getAppAndThemeHashesUrl))
             {
                 yield return www.SendAuthenticatedApiRequest();
 
