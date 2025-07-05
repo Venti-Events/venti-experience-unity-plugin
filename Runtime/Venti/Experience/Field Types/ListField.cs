@@ -46,11 +46,11 @@ namespace Venti.Experience
 
             // Fetch all row fields and populate their child fields
             value = Utils.FetchChildFields<ListRowField>(this.gameObject, searchForInactive);
-            if (value != null)
-            {
-                foreach (var row in value)
-                    row.FetchChildFields(searchForInactive);
-            }
+            //if (value != null)
+            //{
+            //    foreach (var row in value)
+            //        row.FetchChildFields(searchForInactive);
+            //}
         }
 
         public override void Clear()
@@ -104,6 +104,10 @@ namespace Venti.Experience
         {
             JSONObject json = base.GetJson();
             json["header"] = header.GetJson();
+            
+            json["config"]["minSize"] = minSize;
+            json["config"]["maxSize"] = maxSize;
+
             //json["default"] = @default.GetJson();
             return json;
         }

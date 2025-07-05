@@ -9,8 +9,10 @@ namespace Venti.Experience
     [System.Serializable]
     public class ListRowField : BaseField
     {
+        [field: Header("Values")]
         [field: SerializeField] public BaseField[] value { get; private set; }
 
+        [field: Header("Events")]
         [field: SerializeField] public UnityEvent<BaseField[]> onChange { get; private set; }   // send value
         [field: SerializeField] public UnityEvent<string, BaseField[]> onChangeWithId { get; private set; } // send id and value
 
@@ -24,7 +26,7 @@ namespace Venti.Experience
 
         public override void FetchChildFields(bool searchForInactive = false)
         {
-            base.FetchChildFields();
+            base.FetchChildFields(searchForInactive);
 
             GenerateRandomId();
 
