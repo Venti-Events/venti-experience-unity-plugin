@@ -123,6 +123,15 @@ namespace Venti
                 Debug.LogWarning($"File not found: {filePath}");
         }
 
+        public static void DeleteFolder(string  folderName, bool isEditor = false)
+        {
+            string folderPath = GetFolderPath(folderName, isEditor);
+            if (Directory.Exists(folderPath))
+                Directory.Delete(folderPath, true);
+            else
+                Debug.LogWarning($"Folder not found: {folderPath}");
+        }
+
         public static string ConvertToValidFileName(string fileName)
         {
             string validFileName = fileName;

@@ -13,6 +13,11 @@ namespace Venti.Experience
 
         public FieldsPage()
         {
+            SetType();
+        }
+
+        void SetType()
+        {
             if (_type == FieldsPageType.imageFields)
                 type = PageType.imageFields;
             else
@@ -47,6 +52,7 @@ namespace Venti.Experience
                 fieldsJson[fields[i].id] = fields[i].GetJson();
             }
 
+            SetType();
             pageJson["type"] = type.ToString();
             pageJson["order"] = orderJson;
             pageJson["fields"] = fieldsJson;

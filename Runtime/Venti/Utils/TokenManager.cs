@@ -62,23 +62,23 @@ namespace Venti
             }
         }
 
-        private void Update()
-        {
-            if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
-            {
-                if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-                {
-                    if (Input.GetKeyDown(KeyCode.Backspace))
-                    {
-                        PlayerPrefs.DeleteKey("appKey");
-                        PlayerPrefs.DeleteKey("refreshToken");
-                        PlayerPrefs.DeleteKey("accessToken");
-                        PlayerPrefs.Save();
-                        SceneManager.LoadScene(appKeyScanScene);
-                    }
-                }
-            }
-        }
+        //private void Update()
+        //{
+        //    if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+        //    {
+        //        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+        //        {
+        //            if (Input.GetKeyDown(KeyCode.Backspace))
+        //            {
+        //                PlayerPrefs.DeleteKey("appKey");
+        //                PlayerPrefs.DeleteKey("refreshToken");
+        //                PlayerPrefs.DeleteKey("accessToken");
+        //                PlayerPrefs.Save();
+        //                SceneManager.LoadScene(appKeyScanScene);
+        //            }
+        //        }
+        //    }
+        //}
 
         [ContextMenu("Delete App Key")]
         private void DeleteSavedAppKey()
@@ -185,6 +185,15 @@ namespace Venti
             PlayerPrefs.SetString("refreshToken", refreshToken);
             PlayerPrefs.SetString("accessToken", accessToken);
             PlayerPrefs.Save();
+        }
+
+        public void ClearTokens()
+        {
+            PlayerPrefs.DeleteKey("appKey");
+            PlayerPrefs.DeleteKey("refreshToken");
+            PlayerPrefs.DeleteKey("accessToken");
+            PlayerPrefs.Save();
+            SceneManager.LoadScene(appKeyScanScene);
         }
     }
 

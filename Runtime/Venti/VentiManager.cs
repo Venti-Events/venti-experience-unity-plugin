@@ -55,18 +55,26 @@ namespace Venti
                     SessionManager.Instance?.EndSession();
                 }
 
-                //if (Input.GetKeyDown(KeyCode.R))
-                //{
-                //    Debug.Log("Reloading scene.");
-                //    SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-                //}
-
                 if (Input.GetKeyDown(KeyCode.T))
                 {
                     // Debug.Log("Token: " + TokenManager.Instance?.refreshToken);
                     Debug.Log("Registration Tab URL: " + SessionManager.Instance.GetRegistrationTabUrl());
                     Debug.Log("Companion Tab URL: " + SessionManager.Instance.GetCompanionTabUrl());
-                    // Debug.Log(SessionManager.Instance.GetCheckInAppUrl("https://google.com/?foo=bar", "1234567890"));
+                }
+
+                if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                {
+                    if (Input.GetKeyDown(KeyCode.R))
+                    {
+                        Debug.Log("Reloading scene.");
+                        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+                    }
+
+                    if (Input.GetKeyDown(KeyCode.Backspace))
+                    {
+                        CacheManager.Instance.ClearCache();
+                        TokenManager.Instance.ClearTokens();
+                    }
                 }
             }
         }

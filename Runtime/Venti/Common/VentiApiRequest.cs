@@ -10,9 +10,8 @@ namespace Venti
     public class VentiApiRequest : UnityWebRequest
     {
         #region PUBLIC_CONSTANTS
-        //public const string serverUrl = @"https://venti-server-nestjs-128798841108.us-central1.run.app";
+        public const string serverUrl = @"https://venti-server-nestjs-128798841108.us-central1.run.app";
         //public const string serverUrl = @"https://pdm18slv-8080.inc1.devtunnels.ms";
-        public const string serverUrl = @"https://vent-server-nestjs-temp-128798841108.asia-south1.run.app";
         public const string apiRelativeUrl = @"/api/v1";
         public const string apiUrl = serverUrl + apiRelativeUrl;
         #endregion

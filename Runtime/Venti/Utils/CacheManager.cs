@@ -197,6 +197,11 @@ namespace Venti
             }
         }
 
+        public void ClearCache()
+        {
+            FileHandler.DeleteFolder(cacheFolderName);
+        }
+
         // Fetch asset
         private void FetchAsset(CachedAsset cachedAssetData)
         {
