@@ -7,7 +7,7 @@ namespace Venti.Theme
     [Serializable]
     public class Theme
     {
-        public Header header;
+        //public Header header;
         /*public Footer footer;*/
         public ThemeColor themeColors;
         public Typography typography;
@@ -30,7 +30,7 @@ namespace Venti.Theme
             if (json["hash"] == hash)
                 return false;
 
-            header.SetFromJson(json["header"].AsObject);
+            //header.SetFromJson(json["header"].AsObject);
             /*footer.SetFromJson(json["footer"].AsObject);*/
             themeColors.SetFromJson(json["themeColors"].AsObject);
             typography.SetFromJson(json["typography"].AsObject);
@@ -373,7 +373,7 @@ namespace Venti.Theme
         public string textColor;
         public Color textColorValue;
         public RoundingFull rounded;
-        public BorderThickness borderThickness;
+        //public BorderThickness borderThickness;
 
         public bool SetFromJson(JSONObject json)
         {
@@ -386,7 +386,7 @@ namespace Venti.Theme
             textColor = json["textColor"];
             ColorUtility.TryParseHtmlString(textColor, out textColorValue);
             Enum.TryParse<RoundingFull>(json["rounded"].Value, true, out rounded);
-            Enum.TryParse<BorderThickness>(json["borderThickness"].Value, true, out borderThickness);
+            //Enum.TryParse<BorderThickness>(json["borderThickness"].Value, true, out borderThickness);
 
             return true;
         }

@@ -1,6 +1,6 @@
 {
   "name": "com.venti.experience",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "displayName": "Venti Experience",
   "description": "Experience plugin to connect with Venti backend",
   "unity": "2018.1",
